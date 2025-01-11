@@ -27,4 +27,11 @@
       <PackageReference Include="YamlDotNet" Version="16.3.0" />
     </ItemGroup>
 
+    <ItemGroup>
+      <None Remove="server.yaml" />
+      <EmbeddedResource Include="nlog.config.yaml">
+        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+      </EmbeddedResource>
+    </ItemGroup>
+
 </Project>

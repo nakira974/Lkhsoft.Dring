@@ -1,5 +1,6 @@
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.Configuration;
 using System.Reflection;
 using NLog;
 
@@ -24,13 +25,15 @@ public static class DefaultContainer
         {
             get
             {
-                if (_container == null)
+                if (_container is null)
                 {
-                    var catalog = new AggregateCatalog();
-
+                    var catalogs = ConfigurePlugins("PluginsPath", "CommandsPath");
+                    
+                    var catalog = new AggregateCatalog(catalogs);
+                    
                     // Ajouter les assemblages nécessaires au container
-                    catalog.Catalogs.Add(new AssemblyCatalog(typeof(DefaultContainer).Assembly));
-
+                    catalog.Catalogs.Add( new AssemblyCatalog(typeof(DefaultContainer).Assembly));
+                    
                     _container = new CompositionContainer(catalog);
 
                     // Journaliser l'initialisation du container
@@ -64,7 +67,56 @@ public static class DefaultContainer
                 throw;
             }
         }
+        
+        /// <summary>
+        /// Get an export from the container
+        /// </summary>
+        /// <typeparam name="T">Type of the export</typeparam>
+        /// <returns>An instance of the given type</returns>
+        public static T? Get<T>() where T : class
+        {
+            try
+            {
+                var export = Container.GetExport<T>();
+                if (export != null) return export.Value;
+            }
+            catch (Exception ex)
+            {
+                var type = typeof(T);
+                throw new InvalidOperationException($"Could not find the export of type '{type.FullName}'", ex);
+            }
 
+            return null;
+        }
+        
+        /// <summary>
+        /// Returns catalog for plugins loaded from the configuration
+        /// </summary>
+        /// <param name="configKeys">Configuration keys</param>
+        /// <returns></returns>
+        /// <exception cref="InvalidOperationException">Plugins path is invalid or missing</exception>
+        private static IEnumerable<DirectoryCatalog> ConfigurePlugins(params string[] configKeys)
+        {
+            var catalogs = new List<DirectoryCatalog>(configKeys.Length);
+            foreach (var configKey in configKeys)
+            {
+                var pluginsPath = ConfigurationManager.AppSettings[configKey];
+                if(String.IsNullOrEmpty(pluginsPath)) 
+                    throw new InvalidOperationException($"Plugins path for '{configKey}' is missing");
+                try
+                {
+                    _ = Path.GetDirectoryName(pluginsPath);
+                }
+                catch
+                {
+                    throw new InvalidOperationException("Plugins path is invalid");
+                }
+                catalogs.Add(new DirectoryCatalog(pluginsPath));
+            }
+
+            return catalogs;
+        }
+            
         /// <summary>
         /// Log a synchronized message
         /// </summary>
@@ -73,38 +125,8 @@ public static class DefaultContainer
             // Synchroniser l'accès à l'écriture dans le fichier de log
             lock (LockObject)
             {
-                Logger.Info(message);
-            }
-        }
-
-        /// <summary>
-        /// Get an export from the container
-        /// </summary>
-        /// <typeparam name="T">Type of the export</typeparam>
-        /// <returns>An instance of the given type</returns>
-        public static T Get<T>()
-        {
-            try
-            {
-                LogMessage($"Récupération de l'export pour {typeof(T).Name}");
-
-                var export = Container.GetExport<T>();
-
-                if (export != null)
-                {
-                    LogMessage($"Export trouvé pour {typeof(T).Name}");
-                }
-                else
-                {
-                    LogMessage($"Aucun export trouvé pour {typeof(T).Name}");
-                }
-
-                return export.Value;
-            }
-            catch (Exception ex)
-            {
-                LogMessage($"Erreur lors de la récupération de l'export pour {typeof(T).Name}: {ex.Message}");
-                throw;
+                var logger = Get<IAppLogger>();
+                logger?.LogInfo(message);
             }
         }
     }
