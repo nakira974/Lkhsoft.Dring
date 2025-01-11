@@ -1,0 +1,17 @@
+nlog:
+  targets:
+    - name: file
+      type: File
+      fileName: "server.yaml"
+      layout: "${longdate} ${level} ${message} ${exception}"
+      concurrentWrites: true  # Permet de gérer l'écriture concurrente
+      openFileCacheSize: 10000  # Optimiser l'accès concurrent pour de nombreux fichiers
+      keepFileOpen: true
+      encoding: "utf-8"
+      archiveFileName: "server-{#####}.log"
+      maxArchiveFiles: 7
+      archiveAboveSize: 10000000  # Taille du fichier avant archivage
+  rules:
+    - logger: "*"
+      minlevel: Debug
+      writeTo: file

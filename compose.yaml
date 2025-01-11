@@ -1,0 +1,6 @@
+﻿services:
+  dring:
+    image: dring
+    build:
+      context: .
+      dockerfile: Dring/Dockerfile
