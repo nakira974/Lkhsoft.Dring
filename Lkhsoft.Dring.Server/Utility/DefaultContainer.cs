@@ -1,5 +1,6 @@
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
+using System.Configuration;
 using System.Reflection;
 using NLog;
 
@@ -24,13 +25,15 @@ public static class DefaultContainer
         {
             get
             {
-                if (_container == null)
+                if (_container is null)
                 {
-                    var catalog = new AggregateCatalog();
-
+                    var pluginsPath = ConfigurationManager.AppSettings["PluginsPath"] ?? throw new InvalidOperationException("Plugins path is missing");
+                    var pluginsCatalog = new DirectoryCatalog(pluginsPath);
+                    var catalog = new AggregateCatalog(pluginsCatalog);
+                    
                     // Ajouter les assemblages nécessaires au container
-                    catalog.Catalogs.Add(new AssemblyCatalog(typeof(DefaultContainer).Assembly));
-
+                    catalog.Catalogs.Add( new AssemblyCatalog(typeof(DefaultContainer).Assembly));
+                    
                     _container = new CompositionContainer(catalog);
 
                     // Journaliser l'initialisation du container

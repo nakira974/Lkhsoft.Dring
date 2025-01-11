@@ -19,9 +19,6 @@ public class LuaExecutor
     /// </summary>
     public LuaExecutor()
     {
-
-        DefaultContainer.ComposeParts(this);  // Compose les parties et injecte les dépendances
-
         _luaState = new NLua.Lua();
         RegisterFunctions();
     }
