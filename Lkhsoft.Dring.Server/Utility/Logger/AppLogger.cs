@@ -10,6 +10,9 @@ namespace Lkhsoft.Dring.Server.Utility;
 [PartCreationPolicy(CreationPolicy.Shared)]
 public class AppLogger : IAppLogger
 {
+    /// <summary>
+    /// App logger
+    /// </summary>
     private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
 
     /// <summary>
@@ -17,7 +20,7 @@ public class AppLogger : IAppLogger
     /// </summary>
     public AppLogger()
     {
-        NLogConfigurator.ConfigureFromYaml("server.yaml");
+        NLogConfigurator.ConfigureFromYaml("nlog.config.yaml");
     }
 
     ///<inheritdoc/>
@@ -36,5 +39,23 @@ public class AppLogger : IAppLogger
     public void LogWarning(string message)
     {
         _logger.Warn(message);
+    }
+
+    ///<inheritdoc/>
+    public void LogDebug(string message)
+    {
+        _logger.Debug(message);
+    }
+
+    ///<inheritdoc/>
+    public void LogFatal(string message)
+    {
+        _logger.Fatal(message);
+    }
+    
+    ///<inheritdoc/>
+    public void LogTrace(string message)
+    {
+        _logger.Trace(message);
     }
 }

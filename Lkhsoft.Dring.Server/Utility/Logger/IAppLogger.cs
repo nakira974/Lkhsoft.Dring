@@ -22,4 +22,22 @@ public interface IAppLogger
     /// </summary>
     /// <param name="message">Message to log</param>
     void LogWarning(string message);
+    
+    /// <summary>
+    /// Logging a debug message
+    /// </summary>
+    /// <param name="message">Message to log</param>
+    void LogDebug(string message);
+    
+    /// <summary>
+    /// Logging a fatal message
+    /// </summary>
+    /// <param name="message">Message to log</param>
+    void LogFatal(string message);
+    
+    /// <summary>
+    /// Logging a trace message
+    /// </summary>
+    /// <param name="message">Message to log</param>
+    void LogTrace(string message);
 }

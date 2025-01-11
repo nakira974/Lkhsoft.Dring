@@ -1,3 +1,6 @@
+using System.ComponentModel.Composition;
+using Lkhsoft.Dring.Server.Utility;
+
 namespace Lkhsoft.Dring.Server.Cli.Commands;
 
 /// <summary>
@@ -5,6 +8,12 @@ namespace Lkhsoft.Dring.Server.Cli.Commands;
 /// </summary>
 public abstract class CommandBase : ICommand
 {
+    /// <summary>
+    /// Logger
+    /// </summary>
+    [Import]
+    private protected IAppLogger _logger { get; set; }
+    
     /// <inheritdoc/>
     public abstract void Execute(params string[] args);
 
@@ -19,6 +28,7 @@ public abstract class CommandBase : ICommand
         if (input == null)
         {
             Console.WriteLine("Exiting command.");
+            _logger.LogInfo($"Exiting {GetType()} command.");
             throw new OperationCanceledException("Command has been cancelled.");
         }
         return input;

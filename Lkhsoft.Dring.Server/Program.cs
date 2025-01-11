@@ -19,6 +19,11 @@ namespace Lkhsoft.Dring.Server;
 internal class Program
 {
     /// <summary>
+    /// Logger
+    /// </summary>
+    private static IAppLogger _logger;
+    
+    /// <summary>
     /// Default TCP port
     /// </summary>
     private const ushort DefaultTcpPort = 12345;
@@ -69,18 +74,12 @@ internal class Program
     private static readonly X509Certificate2? ServerCertificate = LoadCertificate();
     
     /// <summary>
-    /// Logger part
-    /// </summary>
-    [Import] 
-    private readonly IAppLogger _logger;
-    
-    /// <summary>
     /// Main server task executing CLI and network tasks
     /// </summary>
     private static async Task Main(string[] args)
     {
         Console.WriteLine("Server is starting...");
-        NLogConfigurator.ConfigureFromYaml("server.yaml");
+        _logger = DefaultContainer.Get<IAppLogger>() ?? throw new InvalidOperationException("Could not load app logger");
         
         _ = Task.Run(() => ReceiveTcp());
         _ = Task.Run(() => ReceiveUdp());
@@ -97,6 +96,7 @@ internal class Program
         {
             Console.Write("instance/admin > ");
             var input = ConsoleEventHandler.ReadLine();
+            _logger.LogInfo($"Received command: {input ?? "EXIT"}");
             if (input is null)
             {
                 commandParser.ParseAndExecute("EXIT");
