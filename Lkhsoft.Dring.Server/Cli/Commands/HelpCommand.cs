@@ -1,4 +1,5 @@
 using System.ComponentModel.Composition;
+using System.Globalization;
 
 namespace Lkhsoft.Dring.Server.Cli.Commands;
 
@@ -7,10 +8,10 @@ namespace Lkhsoft.Dring.Server.Cli.Commands;
 /// </summary>
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "HELP")]
-public class HelpCommand : ICommand
+public class HelpCommand : CommandBase
 {
     ///<inheritdoc/>
-    public void Execute(params string[] args)
+    public override void Execute(params string[] args)
     {
         if (args.Length > 1)
         {
@@ -24,7 +25,7 @@ public class HelpCommand : ICommand
             return;
         }
 
-        var command = args[0].ToString().ToUpper();
+        var command = args[0].ToUpper(CultureInfo.InvariantCulture);
         var helpFilePath = $"{command}_help.md";
 
         if (File.Exists(helpFilePath))
@@ -35,6 +36,15 @@ public class HelpCommand : ICommand
         else
         {
             Console.WriteLine($"Help file for command '{command}' not found.");
+        }
+
+        try
+        {
+            ReadOptions();
+        }
+        catch (OperationCanceledException)
+        {
+            return;
         }
     }
 }

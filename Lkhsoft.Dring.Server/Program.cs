@@ -91,11 +91,17 @@ internal class Program
         _semaphore.Release();
         Console.WriteLine("CLI Ready. Type 'exit' to quit.");
         var commandParser = new CommandParser();
+        ConsoleEventHandler.SetupConsoleEventHandlers();
         
         while (true)
         {
             Console.Write("instance/admin > ");
-            var input = Console.ReadLine();
+            var input = ConsoleEventHandler.ReadLine();
+            if (input is null)
+            {
+                commandParser.ParseAndExecute("EXIT");
+                break;
+            }
             commandParser.ParseAndExecute(input);
         }
 

@@ -7,10 +7,10 @@ namespace Lkhsoft.Dring.Server.Cli.Commands;
 /// </summary>
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "LOGON")]
-public class LogonCommand : ICommand
+public class LogonCommand : CommandBase
 {
     ///<inheritdoc/>
-    public void Execute(params string[] args)
+    public override void Execute(params string[] args)
     {
         Console.WriteLine("LOGON command executed. You are now logged on.");
     }

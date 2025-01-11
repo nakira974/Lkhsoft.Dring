@@ -7,10 +7,10 @@ namespace Lkhsoft.Dring.Server.Cli.Commands;
 /// </summary>
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "LOGOFF")]
-public class LogoffCommand : ICommand
+public class LogoffCommand : CommandBase
 {
     ///<inheritdoc/>
-    public void Execute(params string[] args)
+    public override void Execute(params string[] args)
     {
         Console.WriteLine("LOGOFF command executed. You are now logged off.");
     }

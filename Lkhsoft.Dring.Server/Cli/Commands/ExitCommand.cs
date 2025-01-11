@@ -7,10 +7,10 @@ namespace Lkhsoft.Dring.Server.Cli.Commands;
 /// </summary>
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "EXIT")]
-public class ExitCommand : ICommand
+public class ExitCommand : CommandBase
 {
     ///<inheritdoc/>
-    public void Execute(params string[] args)
+    public override void Execute(params string[] args)
     {
         Console.WriteLine("Exiting...");
         Environment.Exit(0);
