@@ -24,7 +24,13 @@ To configure the server, you need to create an app.config file with the followin
         <add key="CommandsPath" value="C:\\Users\\octocat\\Server\\Plugins\\Commands" />
         <add key="UdpPort" value="60500" />
         <add key="TcpPort" value="9091" />
+        <add key="BatchConfigPath" value="batch.config.yaml"/>
+        <add key="BatchDefaultLaunchTime" value="0"/>
+        <add key="BatchOutputAllowed" value="False"/>
     </appSettings>
+    <connectionStrings>
+        <add name="ServerDB" connectionString="Data Source=users.db;Version=3;" providerName="System.Data.SqlClient"/>
+    </connectionStrings>
 </configuration>
 ```
 - CertificatePath: The path to the server certificate file.
@@ -33,6 +39,10 @@ To configure the server, you need to create an app.config file with the followin
 - CommandsPath: The path to the directory containing the command plugins.
 - UdpPort: The UDP port number for the server.
 - TcpPort: The TCP port number for the server.
+- BatchConfigPath: The path to the batch configuration file.
+- BatchDefaultLaunchTime: The default launch time for batch jobs.
+- BatchOutputAllowed: A flag indicating whether Lua batch output is allowed.
+- ServerDB: The datasource for the server database.
 
 ## Extending the Server with MEF
 

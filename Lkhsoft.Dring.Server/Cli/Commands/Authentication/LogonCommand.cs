@@ -41,8 +41,7 @@ public class LogonCommand : AuthenticationCommandBase
         {
             return;
         }
-        
-        
+
 
         if (await AuthenticateUserAsync(username, password))
         {
@@ -85,7 +84,7 @@ public class LogonCommand : AuthenticationCommandBase
         return Convert.ToInt32(result) > 0;
     }
 
-   
+
     /// <summary>
     /// Add the newly created session to the database
     /// </summary>
@@ -103,7 +102,7 @@ public class LogonCommand : AuthenticationCommandBase
 
         await command.ExecuteNonQueryAsync();
     }
-    
+
     /// <summary>
     /// Get user initialization vector
     /// </summary>

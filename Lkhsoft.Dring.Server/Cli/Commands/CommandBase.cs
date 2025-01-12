@@ -27,27 +27,27 @@ public abstract class CommandBase : ICommand
         var input = ConsoleEventHandler.ReadLine();
         if (input == null)
         {
-            Console.WriteLine("Exiting command.");
-            _logger.LogInfo($"Exiting {GetType()} command.");
-            throw new OperationCanceledException("Command has been cancelled.");
+            Console.WriteLine("Exiting command");
+            _logger.LogInfo($"Exiting {GetType()} command");
+            throw new OperationCanceledException("Command has been cancelled");
         }
 
         return input;
     }
-    
+
     /// <summary>
     /// Reads a secure line from the console
     /// </summary>
     /// <param name="iv">Initialization vector</param>
     /// <returns></returns>
     /// <exception cref="OperationCanceledException">Command has been canceled</exception>
-    protected string ReadSecureOptions(string iv )
+    protected string ReadSecureOptions(string iv)
     {
         var input = ConsoleEventHandler.ReadAndEncryptSecureLine(iv);
         if (input == null)
         {
-            _logger.LogInfo($"Exiting {GetType()} command.");
-            throw new OperationCanceledException("Command has been cancelled.");
+            _logger.LogInfo($"Exiting {GetType()} command");
+            throw new OperationCanceledException("Command has been cancelled");
         }
 
         return input;

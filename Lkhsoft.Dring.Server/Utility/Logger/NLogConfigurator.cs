@@ -108,7 +108,7 @@ public static class NLogConfigurator
     /// <summary>
     ///     Configuration model for NLog from YAML
     /// </summary>
-    public class YamlConfiguration
+    private class YamlConfiguration
     {
         public NlogConfig Nlog { get; set; }
     }
@@ -116,7 +116,7 @@ public static class NLogConfigurator
     /// <summary>
     ///     Configuration model for NLog
     /// </summary>
-    public class NlogConfig
+    private class NlogConfig
     {
         public Target[] Targets { get; set; }
         public Rule[] Rules { get; set; }
@@ -125,7 +125,7 @@ public static class NLogConfigurator
     /// <summary>
     ///     Configuration model for NLog target
     /// </summary>
-    public class Target
+    private class Target
     {
         public string Name { get; set; }
         public string Type { get; set; }
@@ -143,7 +143,7 @@ public static class NLogConfigurator
     /// <summary>
     ///     Configuration model for NLog rule
     /// </summary>
-    public class Rule
+    private class Rule
     {
         public string Logger { get; set; }
         public string MinLevel { get; set; }
