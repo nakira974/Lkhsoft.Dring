@@ -93,9 +93,8 @@ internal class Program
         await _semaphore.WaitAsync();
         _semaphore.Release();
         Console.WriteLine("CLI Ready. Type 'exit' to quit.");
-        _logger.LogInfo($"Server started on ports TCP:{TcpPort} and UDP:{UdpPort}");
-        ;
-
+        _logger.LogInfo($"Server started on ports TCP:{TcpPort} and UDP:{UdpPort}");;
+        
         var commandParser = new CommandParser();
         ConsoleEventHandler.SetupConsoleEventHandlers();
 

@@ -16,7 +16,7 @@ public class ISPFCommand : CommandBase
     /// </summary>
     [Import]
     private BatchConfigLoader BatchConfigLoader { get; set; }
-
+    
     /// <inheritdoc />
     public override void Execute(params string[] args)
     {
@@ -33,7 +33,7 @@ public class ISPFCommand : CommandBase
 
 
         ShowMainMenuOptions();
-
+        
         while (!exitMenu)
             try
             {
@@ -85,12 +85,12 @@ public class ISPFCommand : CommandBase
                 break;
             }
     }
-
+    
     #region BATCH
-
     /// <summary>
     /// Displays the main menu options
     /// </summary>
+
     private void ShowMainMenuOptions()
     {
         Console.WriteLine("=========================");
@@ -113,7 +113,7 @@ public class ISPFCommand : CommandBase
     private void ShowBatchMenu()
     {
         var exitBatchMenu = false;
-
+        
         Console.WriteLine();
         Console.WriteLine("===========");
         Console.WriteLine("Batch Menu");
@@ -138,7 +138,7 @@ public class ISPFCommand : CommandBase
             {
                 break;
             }
-
+            
             if (UInt16.TryParse(input, out var batchIndex) && batchIndex > 0 && batchIndex <= batchList.Count)
             {
                 var selectedBatch = batchList[batchIndex - 1];
@@ -172,7 +172,6 @@ public class ISPFCommand : CommandBase
             {
                 break;
             }
-
             // Si l'utilisateur entre une valeur, l'utiliser, sinon garder la valeur par défaut
             var finalValue = String.IsNullOrWhiteSpace(userInput) ? param.DefaultValue : userInput;
             Console.WriteLine($"{param.Name} set to: {finalValue}");
@@ -198,7 +197,7 @@ public class ISPFCommand : CommandBase
         _ = UInt16.TryParse(defaultScheduledTime, out var defaultLaunchTime);
         var batchSchedule = new Dictionary<string, DateTime>
         {
-            {batch.Name, DateTime.Now.AddMinutes(defaultLaunchTime)}
+            { batch.Name, DateTime.Now.AddMinutes(defaultLaunchTime) }
         };
 
         // Charger la configuration des batchs
@@ -207,11 +206,13 @@ public class ISPFCommand : CommandBase
         var batchExecutorPool = new BatchExecutorPool(BatchConfigLoader.BatchConfig.Batches, batchSchedule);
 
         // S'abonner à l'observable pour afficher les messages dans la console
-        batchExecutorPool.CompletionObservable.Subscribe(message => { _logger.LogDebug(message); });
-
+        batchExecutorPool.CompletionObservable.Subscribe(message =>
+        {
+            _logger.LogDebug(message);
+        });
+        
         // Attendre que tous les batchs soient exécutés
         await batchExecutorPool.WaitForCompletionAsync();
     }
-
     #endregion
 }

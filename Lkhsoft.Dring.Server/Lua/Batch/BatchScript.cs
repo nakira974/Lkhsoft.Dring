@@ -9,17 +9,17 @@ public class BatchScript
     /// Script name
     /// </summary>
     public string Name { get; set; }
-
+    
     /// <summary>
     /// Script file path
     /// </summary>
     public string Script { get; set; }
-
+    
     /// <summary>
     /// Script description
     /// </summary>
     public string Description { get; set; }
-
+    
     /// <summary>
     /// Script parameters
     /// </summary>
