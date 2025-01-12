@@ -9,4 +9,9 @@ public interface ICommandMetadata
     ///     Command name
     /// </summary>
     string CommandName { get; }
+    
+    /// <summary>
+    ///     Command alias
+    /// </summary>
+    string CommandAlias { get; }
 }

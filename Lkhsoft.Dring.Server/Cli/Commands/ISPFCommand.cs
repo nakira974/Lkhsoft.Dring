@@ -9,6 +9,7 @@ namespace Lkhsoft.Dring.Server.Cli.Commands;
 /// </summary>
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "ISPF")]
+[ExportMetadata("CommandAlias", "")]
 public class ISPFCommand : CommandBase
 {
     /// <summary>

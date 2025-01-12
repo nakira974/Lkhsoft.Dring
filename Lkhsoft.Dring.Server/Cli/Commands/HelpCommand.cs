@@ -9,6 +9,7 @@ namespace Lkhsoft.Dring.Server.Cli.Commands;
 /// </summary>
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "HELP")]
+[ExportMetadata("CommandAlias", "?")]
 public class HelpCommand : CommandBase
 {
     /// <summary>

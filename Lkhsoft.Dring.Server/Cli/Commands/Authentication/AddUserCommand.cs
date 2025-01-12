@@ -10,6 +10,7 @@ namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 /// </summary>
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "ADDUSER")]
+[ExportMetadata("CommandAlias", "")]
 public class AddUserCommand : AuthenticationCommandBase
 {
     /// <inheritdoc />

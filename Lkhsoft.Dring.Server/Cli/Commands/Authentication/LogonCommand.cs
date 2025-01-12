@@ -12,6 +12,7 @@ namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 /// </summary>
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "LOGON")]
+[ExportMetadata("CommandAlias", "SU")]
 public class LogonCommand : AuthenticationCommandBase
 {
     /// <summary>

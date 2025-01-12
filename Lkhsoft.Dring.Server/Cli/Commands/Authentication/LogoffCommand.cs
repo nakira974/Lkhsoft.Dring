@@ -8,6 +8,7 @@ namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 /// </summary>
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "LOGOFF")]
+[ExportMetadata("CommandAlias", "LOGOUT")]
 public class LogoffCommand : AuthenticationCommandBase
 {
     private readonly string _connectionString = "Data Source=users.db;Version=3;";

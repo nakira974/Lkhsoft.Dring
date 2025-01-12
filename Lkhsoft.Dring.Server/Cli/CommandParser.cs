@@ -25,10 +25,23 @@ public class CommandParser
     {
         DefaultContainer.ComposeParts(this);
 
-        _commands = (_commandImports ?? throw new InvalidOperationException("CLI commands import failed")).ToDictionary(
-            import => import.Metadata.CommandName,
-            import => import.Value
-        );
+        _commands = (_commandImports ?? throw new InvalidOperationException("CLI commands import failed"))
+            .SelectMany(import =>
+            {
+                var commands = new List<KeyValuePair<string, ICommand>>
+                {
+                    new KeyValuePair<string, ICommand>(import.Metadata.CommandName, import.Value)
+                };
+
+                // Si Alias n'est pas null ou vide, ajouter l'alias également
+                if (!String.IsNullOrEmpty(import.Metadata.CommandAlias))
+                {
+                    commands.Add(new KeyValuePair<string, ICommand>(import.Metadata.CommandAlias, import.Value));
+                }
+
+                return commands;
+            })
+            .ToDictionary(command => command.Key, command => command.Value);
     }
 
     /// <summary>
