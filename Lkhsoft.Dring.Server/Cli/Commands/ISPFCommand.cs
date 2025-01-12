@@ -3,13 +3,13 @@ using System.ComponentModel.Composition;
 namespace Lkhsoft.Dring.Server.Cli.Commands;
 
 /// <summary>
-/// ISPF command implementation
+///     ISPF command implementation
 /// </summary>
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "ISPF")]
 public class ISPFCommand : CommandBase
 {
-    ///<inheritdoc/>
+    /// <inheritdoc />
     public override void Execute(params string[] args)
     {
         Console.WriteLine("ISPF command executed. Entering ISPF environment.");
@@ -17,14 +17,13 @@ public class ISPFCommand : CommandBase
     }
 
     /// <summary>
-    /// Display the ISPF menu
+    ///     Display the ISPF menu
     /// </summary>
     private void ShowISPFMenu()
     {
-        bool exitMenu = false;
+        var exitMenu = false;
 
         while (!exitMenu)
-        {
             try
             {
                 Console.WriteLine("ISPF Primary Option Menu");
@@ -83,6 +82,5 @@ public class ISPFCommand : CommandBase
             {
                 break;
             }
-        }
     }
 }
