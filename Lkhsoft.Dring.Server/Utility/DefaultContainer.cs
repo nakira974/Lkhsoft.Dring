@@ -126,7 +126,7 @@ public static class DefaultContainer
         lock (LockObject)
         {
             var logger = Get<IAppLogger>();
-            logger?.LogInfo(message);
+            logger?.LogTrace(message);
         }
     }
 }

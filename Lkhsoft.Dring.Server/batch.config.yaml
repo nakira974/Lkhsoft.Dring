@@ -1,0 +1,16 @@
+batchConfig:
+  path: "Scripts" # Path containing the scripts
+  batches:
+    - name: "WriteTimespanBatch"  # Batch name
+      script: "write_timespan.lua"  # Script to be executed
+      description: "Writes the current timespan to a file every 10 seconds for 1 minute"  # Batch description
+      parameters:
+        - name: "filePath"  # Parameter to specify file output path
+          type: "System.String"  # Parameter type
+          defaultValue: "C:\\lua\\output.txt"  # Default value
+        - name: "interval"  # Parameter to specify the time in seconds between two writes
+          type: "System.Byte"  # Parameter type
+          defaultValue: 10  # Default value (10 seconds)
+        - name: "iterations"  # Parameter to specify the number of times the script will write the timespan
+          type: "System.Int32"  # Parameter type
+          defaultValue: 6  # Default value (6 iterations)
