@@ -9,7 +9,7 @@ public class BatchConfig
     /// Scripts folder path
     /// </summary>
     public string Path { get; set; }
-
+    
     /// <summary>
     /// Registered batch scripts
     /// </summary>

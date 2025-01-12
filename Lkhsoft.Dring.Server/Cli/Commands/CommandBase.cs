@@ -34,14 +34,14 @@ public abstract class CommandBase : ICommand
 
         return input;
     }
-
+    
     /// <summary>
     /// Reads a secure line from the console
     /// </summary>
     /// <param name="iv">Initialization vector</param>
     /// <returns></returns>
     /// <exception cref="OperationCanceledException">Command has been canceled</exception>
-    protected string ReadSecureOptions(string iv)
+    protected string ReadSecureOptions(string iv )
     {
         var input = ConsoleEventHandler.ReadAndEncryptSecureLine(iv);
         if (input == null)

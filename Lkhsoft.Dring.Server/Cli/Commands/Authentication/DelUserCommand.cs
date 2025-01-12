@@ -8,6 +8,7 @@ namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 /// </summary>
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "DELUSER")]
+[ExportMetadata("CommandAlias", "")]
 public class DelUserCommand : AuthenticationCommandBase
 {
     /// <inheritdoc />
@@ -18,7 +19,7 @@ public class DelUserCommand : AuthenticationCommandBase
             Console.WriteLine("Usage: DELUSER <username>");
             return;
         }
-
+        
         var username = args[0];
         if (!await UserExistsAsync(username))
         {
@@ -33,11 +34,11 @@ public class DelUserCommand : AuthenticationCommandBase
             _logger.LogError($"DELUSER command failed. User {username} could not be deleted");
             return;
         }
-
+        
         Console.WriteLine("DELUSER command executed. User deleted successfully");
         _logger.LogInfo($"User {username} deleted at {DateTime.Now}");
     }
-
+    
     /// <summary>
     /// Removes a user from the database
     /// </summary>

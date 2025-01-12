@@ -1,5 +1,6 @@
 using System.ComponentModel.Composition;
 using System.Globalization;
+using Lkhsoft.Dring.Server.Utility;
 
 namespace Lkhsoft.Dring.Server.Cli.Commands;
 
@@ -8,8 +9,14 @@ namespace Lkhsoft.Dring.Server.Cli.Commands;
 /// </summary>
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "HELP")]
+[ExportMetadata("CommandAlias", "?")]
 public class HelpCommand : CommandBase
 {
+    /// <summary>
+    /// Enumeration of all commands
+    /// </summary>
+    [ImportMany] private IEnumerable<Lazy<ICommand, ICommandMetadata>> _commandImports;
+    
     /// <inheritdoc />
     public override void Execute(params string[] args)
     {
@@ -21,7 +28,7 @@ public class HelpCommand : CommandBase
 
         if (args.Length == 0)
         {
-            Console.WriteLine("Usage: HELP <command>");
+            ConsoleEventHandler.DisplayItems("HELP", _commandImports.Select(x => x.Metadata.CommandName));
             return;
         }
 

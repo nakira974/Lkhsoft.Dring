@@ -3,17 +3,16 @@ using System.ComponentModel.Composition;
 namespace Lkhsoft.Dring.Server.Cli.Commands;
 
 /// <summary>
-///     EXIT command implementation
+///     CLEAR command implementation
 /// </summary>
 [Export(typeof(ICommand))]
-[ExportMetadata("CommandName", "EXIT")]
-[ExportMetadata("CommandAlias", "QUIT")]
-public class ExitCommand : CommandBase
+[ExportMetadata("CommandName", "CLEAR")]
+[ExportMetadata("CommandAlias", "")]
+public class ClearCommand : CommandBase
 {
     /// <inheritdoc />
     public override void Execute(params string[] args)
     {
-        Console.WriteLine("Exiting...");
-        Environment.Exit(0);
+        Console.Clear();
     }
 }
