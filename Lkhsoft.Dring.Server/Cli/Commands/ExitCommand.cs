@@ -3,13 +3,13 @@ using System.ComponentModel.Composition;
 namespace Lkhsoft.Dring.Server.Cli.Commands;
 
 /// <summary>
-/// EXIT command implementation
+///     EXIT command implementation
 /// </summary>
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "EXIT")]
 public class ExitCommand : CommandBase
 {
-    ///<inheritdoc/>
+    /// <inheritdoc />
     public override void Execute(params string[] args)
     {
         Console.WriteLine("Exiting...");

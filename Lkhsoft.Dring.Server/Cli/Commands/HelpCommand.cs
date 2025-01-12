@@ -4,13 +4,13 @@ using System.Globalization;
 namespace Lkhsoft.Dring.Server.Cli.Commands;
 
 /// <summary>
-/// HELP command implementation
+///     HELP command implementation
 /// </summary>
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "HELP")]
 public class HelpCommand : CommandBase
 {
-    ///<inheritdoc/>
+    /// <inheritdoc />
     public override void Execute(params string[] args)
     {
         if (args.Length > 1)
@@ -44,7 +44,6 @@ public class HelpCommand : CommandBase
         }
         catch (OperationCanceledException)
         {
-            return;
         }
     }
 }

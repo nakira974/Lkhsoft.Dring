@@ -1,5 +1,4 @@
 ﻿using System.Collections.Concurrent;
-using System.ComponentModel.Composition;
 using System.Configuration;
 using System.Data.SQLite;
 using System.Net;
@@ -14,73 +13,78 @@ using Lkhsoft.Dring.Server.Utility;
 namespace Lkhsoft.Dring.Server;
 
 /// <summary>
-/// Main class of the server
+///     Main class of the server
 /// </summary>
 internal class Program
 {
     /// <summary>
-    /// Logger
-    /// </summary>
-    private static IAppLogger _logger;
-    
-    /// <summary>
-    /// Default TCP port
+    ///     Default TCP port
     /// </summary>
     private const ushort DefaultTcpPort = 12345;
-    
+
     /// <summary>
-    /// Default UDP port
+    ///     Default UDP port
     /// </summary>
     private const ushort DefaultUdpPort = 54321;
-    
+
     /// <summary>
-    /// Tcp port from configuration file
+    ///     Logger
+    /// </summary>
+    private static IAppLogger _logger;
+
+    /// <summary>
+    ///     Tcp port from configuration file
     /// </summary>
     private static readonly ushort TcpPort = GetTcpPort();
-    
+
     /// <summary>
-    /// Udp port from configuration file
+    ///     Udp port from configuration file
     /// </summary>
     private static readonly ushort UdpPort = GetUdpPort();
-    
+
     /// <summary>
-    /// Mutex for the server
+    ///     Mutex for the server
     /// </summary>
-    private static SemaphoreSlim _semaphore = new(1, 1);
-    
+    private static readonly SemaphoreSlim _semaphore = new(1, 1);
+
     /// <summary>
-    /// Mutex for CLI
+    ///     Mutex for CLI
     /// </summary>
     private static Semaphore _cliSemaphore = new(1, 1);
-    
+
     /// <summary>
-    /// Tcp channels for each client
+    ///     Tcp channels for each client
     /// </summary>
     private static readonly ConcurrentDictionary<string, NetworkStream> Clients = new();
-    
+
     /// <summary>
-    /// Send channels for each client
+    ///     Send channels for each client
     /// </summary>
     private static readonly ConcurrentDictionary<string, UdpClient?> SendChannels = new();
-    
+
     /// <summary>
-    /// Message priority queue
+    ///     Message priority queue
     /// </summary>
     private static readonly PriorityQueue<Message, byte> GlobalPriorityQueue = new();
-    
+
     /// <summary>
-    /// Server certificate
+    ///     Server certificate
     /// </summary>
     private static readonly X509Certificate2? ServerCertificate = LoadCertificate();
-    
+
     /// <summary>
-    /// Main server task executing CLI and network tasks
+    ///     Main server task executing CLI and network tasks
     /// </summary>
     private static async Task Main(string[] args)
     {
         Console.WriteLine("Server is starting...");
-        _logger = DefaultContainer.Get<IAppLogger>() ?? throw new InvalidOperationException("Could not load app logger");
-        
+        _logger = DefaultContainer.Get<IAppLogger>() ??
+                  throw new InvalidOperationException("Could not load app logger");
+
+        var initializer = new DatabaseInitializer();
+        await initializer.InitializeDatabaseAsync();
+        _logger.LogInfo("Database has been initialized successfully");
+
         _ = Task.Run(() => ReceiveTcp());
         _ = Task.Run(() => ReceiveUdp());
         _ = Task.Run(() => Transmit());
@@ -91,7 +95,7 @@ internal class Program
         Console.WriteLine("CLI Ready. Type 'exit' to quit.");
         var commandParser = new CommandParser();
         ConsoleEventHandler.SetupConsoleEventHandlers();
-        
+
         while (true)
         {
             Console.Write("instance/admin > ");
@@ -102,6 +106,7 @@ internal class Program
                 commandParser.ParseAndExecute("EXIT");
                 break;
             }
+
             commandParser.ParseAndExecute(input);
         }
 
@@ -335,9 +340,9 @@ internal class Program
             return null;
         }
     }
-    
+
     /// <summary>
-    /// Returns the UDP port from the configuration file
+    ///     Returns the UDP port from the configuration file
     /// </summary>
     /// <returns></returns>
     public static ushort GetUdpPort()
@@ -345,11 +350,11 @@ internal class Program
         var udpPort = ConfigurationManager.AppSettings["UdpPort"] ??
                       throw new InvalidOperationException("Udp port is missing");
 
-        return UInt16.TryParse(udpPort, out var port) ? port : DefaultUdpPort;
+        return ushort.TryParse(udpPort, out var port) ? port : DefaultUdpPort;
     }
-    
+
     /// <summary>
-    /// Returns the TCP port from the configuration file
+    ///     Returns the TCP port from the configuration file
     /// </summary>
     /// <returns></returns>
     public static ushort GetTcpPort()
@@ -357,10 +362,9 @@ internal class Program
         var udpPort = ConfigurationManager.AppSettings["TcpPort"] ??
                       throw new InvalidOperationException("Tcp port is missing");
 
-        return UInt16.TryParse(udpPort, out var port) ? port : DefaultTcpPort;
+        return ushort.TryParse(udpPort, out var port) ? port : DefaultTcpPort;
     }
 }
-
 
 /// <summary>
 ///     Represents a message with metadata for prioritization

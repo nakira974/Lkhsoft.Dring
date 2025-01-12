@@ -1,21 +1,17 @@
 using System.Composition;
-using Lkhsoft.Dring.Server.Utility;
 
 namespace Lkhsoft.Dring.Server.Lua;
 
 /// <summary>
-/// Lua script executor
+///     Lua script executor
 /// </summary>
 [Export(typeof(LuaExecutor))]
 public class LuaExecutor
 {
     private readonly NLua.Lua _luaState;
 
-    [ImportMany]
-    public IEnumerable<ILuaDelegate> LuaDelegates { get; }
-
     /// <summary>
-    /// Default constructor
+    ///     Default constructor
     /// </summary>
     public LuaExecutor()
     {
@@ -23,19 +19,19 @@ public class LuaExecutor
         RegisterFunctions();
     }
 
+    [ImportMany] public IEnumerable<ILuaDelegate> LuaDelegates { get; }
+
     /// <summary>
-    /// Registers discovered C# functions to Lua environment
+    ///     Registers discovered C# functions to Lua environment
     /// </summary>
     private void RegisterFunctions()
     {
-        foreach (var function in LuaDelegates)
-        {
-            function.Execute(_luaState);  // Enregistrer chaque fonction dans l'environnement Lua
-        }
+        foreach (var function in
+                 LuaDelegates) function.Execute(_luaState); // Enregistrer chaque fonction dans l'environnement Lua
     }
 
     /// <summary>
-    /// Runs a Lua script
+    ///     Runs a Lua script
     /// </summary>
     /// <param name="script">Script to execute</param>
     public void ExecuteScript(string script)
@@ -47,10 +43,7 @@ public class LuaExecutor
             if (result != null)
             {
                 Console.WriteLine("Résultats :");
-                foreach (var res in result)
-                {
-                    Console.WriteLine(res);
-                }
+                foreach (var res in result) Console.WriteLine(res);
             }
         }
         catch (Exception ex)
@@ -60,7 +53,7 @@ public class LuaExecutor
     }
 
     /// <summary>
-    /// Close Lua state
+    ///     Close Lua state
     /// </summary>
     public void Close()
     {

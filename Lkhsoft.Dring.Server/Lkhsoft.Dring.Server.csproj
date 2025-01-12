@@ -10,28 +10,32 @@
     </PropertyGroup>
 
     <ItemGroup>
-      <Content Include="..\.dockerignore">
-        <Link>.dockerignore</Link>
-      </Content>
+        <Content Include="..\.dockerignore">
+            <Link>.dockerignore</Link>
+        </Content>
     </ItemGroup>
 
     <ItemGroup>
-      <PackageReference Include="NLog" Version="5.3.4" />
-      <PackageReference Include="NLua" Version="1.7.3" />
-      <PackageReference Include="System.ComponentModel" Version="4.3.0" />
-      <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0" />
-      <PackageReference Include="System.ComponentModel.Composition" Version="9.0.0" />
-      <PackageReference Include="System.Composition" Version="9.0.0" />
-      <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.0" />
-      <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119" />
-      <PackageReference Include="YamlDotNet" Version="16.3.0" />
+        <PackageReference Include="NLog" Version="5.3.4"/>
+        <PackageReference Include="NLua" Version="1.7.3"/>
+        <PackageReference Include="System.ComponentModel" Version="4.3.0"/>
+        <PackageReference Include="System.ComponentModel.Annotations" Version="5.0.0"/>
+        <PackageReference Include="System.ComponentModel.Composition" Version="9.0.0"/>
+        <PackageReference Include="System.Composition" Version="9.0.0"/>
+        <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.0"/>
+        <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119"/>
+        <PackageReference Include="YamlDotNet" Version="16.3.0"/>
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="server.yaml" />
-      <EmbeddedResource Include="nlog.config.yaml">
-        <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-      </EmbeddedResource>
+        <None Remove="server.yaml"/>
+        <EmbeddedResource Include="nlog.config.yaml">
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </EmbeddedResource>
+        <None Remove="database.sql" />
+        <EmbeddedResource Include="database.sql">
+          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+        </EmbeddedResource>
     </ItemGroup>
 
 </Project>

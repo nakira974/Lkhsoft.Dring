@@ -3,12 +3,12 @@ using System.ComponentModel.Composition;
 namespace Lkhsoft.Dring.Server.Lua.Api;
 
 /// <summary>
-/// Lua math function
+///     Lua math function
 /// </summary>
-[Export(typeof(ILuaDelegate))]  // Une autre fonction d'extension
+[Export(typeof(ILuaDelegate))] // Une autre fonction d'extension
 public class AddFunction : ILuaDelegate
 {
-    ///<inheritdoc/>
+    /// <inheritdoc />
     public void Execute(NLua.Lua luaState)
     {
         luaState["Add"] = new Func<double, double, double>((a, b) => a + b);
