@@ -18,9 +18,15 @@ public class HelpCommand : CommandBase
     /// Enumeration of all commands
     /// </summary>
     [ImportMany] private IEnumerable<Lazy<ICommand, ICommandMetadata>> _commandImports;
+    
+    /// <summary>
+    ///     Session service
+    /// </summary>
+    [Import]
+    private ISessionService _sessionService { get; set; }
 
     /// <inheritdoc />
-    public override void Execute(params string[] args)
+    public override async void Execute(params string[] args)
     {
         if (args.Length > 1)
         {
@@ -28,9 +34,31 @@ public class HelpCommand : CommandBase
             return;
         }
 
+        ICollection<Lazy<ICommand, ICommandMetadata>> authorizedCommands = new List<Lazy<ICommand, ICommandMetadata>>();
+        if (authorizedCommands == null) 
+            throw new ArgumentNullException(nameof(authorizedCommands));
+
+        foreach (var currentCommand in _commandImports)
+        {
+            if (currentCommand.Value.GetType()
+                    .GetCustomAttributes(typeof(AuthorizedCommandAttribute), true)
+                    .FirstOrDefault() is not AuthorizedCommandAttribute authorizedCommandAttribute) continue;
+            
+            var userRole = await _sessionService.GetUserRoleAsync(Program.CurrentSession?.Username ??
+                                                                  throw new InvalidOperationException(
+                                                                      "No session has been found"));
+            if (userRole is null || !Enum.TryParse(userRole, out AuthorizationType userAuthorizationType) ||
+                !authorizedCommandAttribute.Authorizations.Contains(userAuthorizationType))
+            {
+                continue;
+            }
+            authorizedCommands.Add(currentCommand);
+        }
+       
+
         if (args.Length == 0)
         {
-            ConsoleEventHandler.DisplayItems("HELP", _commandImports.Select(x => x.Metadata.CommandName));
+            ConsoleEventHandler.DisplayItems("HELP", authorizedCommands.Select(x => x.Metadata.CommandName));
             return;
         }
 
