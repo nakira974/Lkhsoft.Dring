@@ -24,7 +24,7 @@
         <PackageReference Include="System.Composition" Version="9.0.0"/>
         <PackageReference Include="System.Configuration.ConfigurationManager" Version="9.0.0"/>
         <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119"/>
-        <PackageReference Include="System.Reactive" Version="6.0.1" />
+        <PackageReference Include="System.Reactive" Version="6.0.1"/>
         <PackageReference Include="YamlDotNet" Version="16.3.0"/>
     </ItemGroup>
 
@@ -33,18 +33,18 @@
         <EmbeddedResource Include="nlog.config.yaml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </EmbeddedResource>
-        <None Remove="database.sql" />
+        <None Remove="database.sql"/>
         <EmbeddedResource Include="database.sql">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </EmbeddedResource>
-        <None Remove="batch.yaml" />
-        <None Remove="Scripts\write_timespan.lua" />
+        <None Remove="batch.yaml"/>
+        <None Remove="Scripts\write_timespan.lua"/>
         <EmbeddedResource Include="Scripts\write_timespan.lua">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </EmbeddedResource>
-        <None Remove="batch.config.yaml" />
+        <None Remove="batch.config.yaml"/>
         <EmbeddedResource Include="batch.config.yaml">
-          <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </EmbeddedResource>
     </ItemGroup>
 

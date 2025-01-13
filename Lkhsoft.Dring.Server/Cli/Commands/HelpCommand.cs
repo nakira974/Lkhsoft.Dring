@@ -18,7 +18,7 @@ public class HelpCommand : CommandBase
     /// Enumeration of all commands
     /// </summary>
     [ImportMany] private IEnumerable<Lazy<ICommand, ICommandMetadata>> _commandImports;
-    
+
     /// <inheritdoc />
     public override void Execute(params string[] args)
     {

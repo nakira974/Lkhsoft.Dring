@@ -14,7 +14,7 @@ public class Session : IComparable<Session>
         Id = Guid.NewGuid();
         Username = username;
     }
-    
+
     /// <summary>
     /// Session ID
     /// </summary>

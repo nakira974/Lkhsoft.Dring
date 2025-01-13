@@ -9,7 +9,7 @@ public class AuthorizedCommandAttribute : Attribute
     /// <summary>
     /// Allowed authorizations of a command
     /// </summary>
-    public ISet<AuthorizationType>  Authorizations { get; }
+    public ISet<AuthorizationType> Authorizations { get; }
 
     /// <summary>
     /// Default constructor
@@ -18,6 +18,7 @@ public class AuthorizedCommandAttribute : Attribute
     /// <exception cref="ArgumentNullException"></exception>
     public AuthorizedCommandAttribute(params AuthorizationType[] authorizations)
     {
-        Authorizations = new HashSet<AuthorizationType>(authorizations ?? throw new ArgumentNullException(nameof(authorizations)));
+        Authorizations =
+            new HashSet<AuthorizationType>(authorizations ?? throw new ArgumentNullException(nameof(authorizations)));
     }
 }

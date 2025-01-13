@@ -17,9 +17,9 @@ public class LogonCommand : AuthenticationCommandBase
     /// <summary>
     /// Session service
     /// </summary>
-    [Import] 
+    [Import]
     private ISessionService _sessionService { get; set; }
-    
+
     /// <summary>
     ///     Default constructor
     /// </summary>
@@ -47,8 +47,7 @@ public class LogonCommand : AuthenticationCommandBase
         {
             return;
         }
-        
-        
+
 
         if (await AuthenticateUserAsync(username, password))
         {
@@ -90,7 +89,7 @@ public class LogonCommand : AuthenticationCommandBase
         var result = await command.ExecuteScalarAsync();
         return Convert.ToInt32(result) > 0;
     }
-    
+
     /// <summary>
     /// Get user initialization vector
     /// </summary>

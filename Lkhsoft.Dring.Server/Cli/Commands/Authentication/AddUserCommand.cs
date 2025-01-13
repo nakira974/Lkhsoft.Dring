@@ -22,8 +22,8 @@ public class AddUserCommand : AuthenticationCommandBase
             Console.WriteLine("Usage: ADDUSER <username>");
             return;
         }
-        
-        
+
+
         var username = args[0];
         if (await UserExistsAsync(username))
         {
@@ -31,7 +31,7 @@ public class AddUserCommand : AuthenticationCommandBase
             _logger.LogWarning($"USERADD command failed. User {username} already exists in the database.");
             return;
         }
-        
+
         string? password;
         var iv = GetRandomIv();
         try
@@ -57,7 +57,7 @@ public class AddUserCommand : AuthenticationCommandBase
             _logger.LogError(message);
         }
     }
-    
+
     /// <summary>
     /// Generate a random IV of 16 bytes length
     /// </summary>
@@ -69,7 +69,7 @@ public class AddUserCommand : AuthenticationCommandBase
         rng.GetBytes(iv);
         return BitConverter.ToString(iv).Replace("-", String.Empty);
     }
-    
+
     /// <summary>
     /// Create a new user in the database
     /// </summary>

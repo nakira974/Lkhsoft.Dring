@@ -17,7 +17,7 @@ public class ExitCommand : CommandBase
     /// Session service
     /// </summary>
     [Import] private ISessionService _sessionService;
-    
+
     /// <inheritdoc />
     public override void Execute(params string[] args)
     {

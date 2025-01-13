@@ -2,47 +2,47 @@
 CREATE TABLE IF NOT EXISTS Users
 (
     Username
-    TEXT
-    PRIMARY
-    KEY,
+        TEXT
+        PRIMARY
+            KEY,
     Password
-    TEXT
-    NOT
-    NULL,
+        TEXT
+        NOT
+            NULL,
     Role
-    TEXT
-    NOT
-    NULL,
+        TEXT
+        NOT
+            NULL,
     IsConnected
-    INTEGER
-    NOT
-    NULL
-    DEFAULT
-    0,
+        INTEGER
+        NOT
+            NULL
+        DEFAULT
+            0,
     IV,
     TEXT
-    NOT 
-    NULL
+        NOT
+            NULL
 );
 
 -- Cretae the table Sessions if it does not exist
 CREATE TABLE IF NOT EXISTS Sessions
 (
     SessionId
-    TEXT
-    PRIMARY
-    KEY,
+        TEXT
+        PRIMARY
+            KEY,
     Username
-    TEXT
-    NOT
-    NULL,
+        TEXT
+        NOT
+            NULL,
     StartTime
-    TEXT
-    NOT
-    NULL,
+        TEXT
+        NOT
+            NULL,
     EndTime
-    TEXT,
+        TEXT,
     FOREIGN
-    KEY (Username) 
-    REFERENCES Users (Username)
+        KEY (Username)
+        REFERENCES Users (Username)
 );

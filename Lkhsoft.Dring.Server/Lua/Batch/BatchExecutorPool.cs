@@ -13,12 +13,12 @@ public class BatchExecutorPool
     /// Maximum number of batch scripts per task
     /// </summary>
     private const int MaxBatchsPerTask = 5;
-    
+
     /// <summary>
     /// Running tasks that contain batch scripts
     /// </summary>
     private List<Task> _tasks = new List<Task>();
-    
+
     /// <summary>
     /// Completion subject
     /// </summary>
@@ -38,7 +38,7 @@ public class BatchExecutorPool
     {
         // Regrouper les batchs en groupes de taille maximale
         var batchGroups = batchScripts
-            .Select((batch, index) => new { batch, index })
+            .Select((batch, index) => new {batch, index})
             .GroupBy(x => x.index / MaxBatchsPerTask)
             .Select(group => group.Select(x => x.batch).ToList())
             .ToList();

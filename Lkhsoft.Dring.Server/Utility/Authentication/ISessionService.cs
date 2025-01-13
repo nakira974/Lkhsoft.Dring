@@ -16,7 +16,7 @@ public interface ISessionService
     /// </summary>
     /// <param name="session">Session to be removed</param>
     public void RemoveSession(Session session);
-    
+
     /// <summary>
     /// Clears all session from the service
     /// </summary>

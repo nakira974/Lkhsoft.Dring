@@ -40,7 +40,7 @@ public abstract class AuthenticationCommandBase : CommandBase
 
         await command.ExecuteNonQueryAsync();
     }
-    
+
     /// <summary>
     /// Check if a user already exists in the database
     /// </summary>
@@ -58,7 +58,7 @@ public abstract class AuthenticationCommandBase : CommandBase
         await using var connection = new SQLiteConnection(ConnectionString);
         await connection.OpenAsync();
         await using var command = new SQLiteCommand(query, connection);
-        
+
         command.Parameters.AddWithValue("@Username", username);
 
         var result = await command.ExecuteScalarAsync();

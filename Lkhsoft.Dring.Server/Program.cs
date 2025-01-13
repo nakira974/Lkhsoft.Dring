@@ -93,10 +93,12 @@ internal class Program
         await _semaphore.WaitAsync();
         _semaphore.Release();
         Console.WriteLine("CLI Ready. Type 'exit' to quit.");
-        _logger.LogInfo($"Server started on ports TCP:{TcpPort} and UDP:{UdpPort}");;
-        
+        _logger.LogInfo($"Server started on ports TCP:{TcpPort} and UDP:{UdpPort}");
+        ;
+
         var commandParser = new CommandParser();
-        ConsoleEventHandler.SetupConsoleEventHandlers();
+
+        SetupSignalHandlers();
 
         while (true)
         {
@@ -280,6 +282,34 @@ internal class Program
         }
 
         return null;
+    }
+
+    /// <summary>
+    /// Set up signal handlers for graceful shutdown
+    /// </summary>
+    private static void SetupSignalHandlers()
+    {
+        bool isExiting = false;
+
+        void HandleShutdown()
+        {
+            if (isExiting) return; // Évite les appels multiples
+            isExiting = true;
+
+            Console.WriteLine("Shutdown signal received. Cleaning up...");
+            Console.WriteLine("Server is shutting down gracefully");
+            DefaultContainer.Get<IAppLogger>()?.LogTrace("Shutdown signal received, server shut down gracefully");
+            var commandParser = new CommandParser();
+            commandParser.ParseAndExecute("EXIT");
+        }
+
+        Console.CancelKeyPress += (sender, e) =>
+        {
+            e.Cancel = true;
+            HandleShutdown();
+        };
+
+        AppDomain.CurrentDomain.ProcessExit += (sender, e) => { HandleShutdown(); };
     }
 
     /// <summary>

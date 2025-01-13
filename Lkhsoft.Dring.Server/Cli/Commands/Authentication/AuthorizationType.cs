@@ -9,12 +9,12 @@ public enum AuthorizationType
     /// No authorization required
     /// </summary>
     Guest,
-    
+
     /// <summary>
     /// User authorization required
     /// </summary>
     User,
-    
+
     /// <summary>
     /// Admin authorization required
     /// </summary>

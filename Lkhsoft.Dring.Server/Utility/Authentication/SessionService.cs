@@ -3,6 +3,7 @@ using System.Configuration;
 using System.Data.SQLite;
 
 namespace Lkhsoft.Dring.Server.Utility;
+
 /// <summary>
 /// Session service implementation
 /// </summary>
@@ -10,9 +11,8 @@ namespace Lkhsoft.Dring.Server.Utility;
 [PartCreationPolicy(CreationPolicy.Shared)]
 public class SessionService : ISessionService
 {
-    [Import]
-    private IAppLogger _logger { get; set; }
-    
+    [Import] private IAppLogger _logger { get; set; }
+
     /// <summary>
     /// List of sessions for the current instance
     /// </summary>
@@ -31,11 +31,12 @@ public class SessionService : ISessionService
         _sessions = new HashSet<Session>();
         _connectionString = ConfigurationManager.ConnectionStrings["ServerDB"].ConnectionString;
     }
+
     public Session? GetSessionByUsername(string username)
     {
         return _sessions.FirstOrDefault(s => s.Username == username);
     }
-    
+
     ///<inheritdoc />
     public async void AddSession(Session session)
     {
@@ -44,6 +45,7 @@ public class SessionService : ISessionService
             if (_sessions.Add(session))
             {
                 await AddSessionToDatabaseAsync(session);
+                _logger.LogTrace($"Session {session.Id} created at {DateTime.Now}");
             }
         }
         catch (Exception e)
@@ -60,6 +62,7 @@ public class SessionService : ISessionService
             if (_sessions.Remove(session))
             {
                 await UpdateSessionEndTimeAsync(session.Id.ToString());
+                _logger.LogTrace($"Session {session.Id} removed at {DateTime.Now}");
             }
         }
         catch (Exception e)
@@ -72,11 +75,11 @@ public class SessionService : ISessionService
     public void ClearAllSessions()
     {
         foreach (var session in _sessions)
-        { 
+        {
             RemoveSession(session);
         }
     }
-    
+
     /// <summary>
     /// Add the newly created session to the database
     /// </summary>
@@ -94,7 +97,7 @@ public class SessionService : ISessionService
 
         await command.ExecuteNonQueryAsync();
     }
-    
+
     /// <summary>
     ///     Update the session end time in the database
     /// </summary>
