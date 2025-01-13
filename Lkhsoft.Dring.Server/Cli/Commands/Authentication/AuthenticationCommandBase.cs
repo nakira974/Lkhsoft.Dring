@@ -24,24 +24,6 @@ public abstract class AuthenticationCommandBase : CommandBase
     }
 
     /// <summary>
-    ///     Update the status of the user's connection
-    /// </summary>
-    /// <param name="username">Username to update</param>
-    /// <param name="isConnected">User status</param>
-    private protected async Task UpdateUserConnectionStatusAsync(string username, bool isConnected)
-    {
-        await using var connection = new SQLiteConnection(ConnectionString);
-        await connection.OpenAsync();
-
-        var query = "UPDATE Users SET IsConnected = @IsConnected WHERE Username = @Username";
-        await using var command = new SQLiteCommand(query, connection);
-        command.Parameters.AddWithValue("@IsConnected", isConnected ? 1 : 0);
-        command.Parameters.AddWithValue("@Username", username);
-
-        await command.ExecuteNonQueryAsync();
-    }
-
-    /// <summary>
     /// Check if a user already exists in the database
     /// </summary>
     /// <param name="username">Username to check</param>
