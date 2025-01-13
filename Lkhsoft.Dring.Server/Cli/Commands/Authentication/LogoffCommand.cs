@@ -39,8 +39,6 @@ public class LogoffCommand : AuthenticationCommandBase
             return;
         }
 
-        // Update the IsConnected field in the Users table
-        await UpdateUserConnectionStatusAsync(username, false);
         _logger.LogInfo($"User {username} logged off at {DateTime.Now}");
 
         // Mettre à jour la session en la retirant

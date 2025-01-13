@@ -58,9 +58,7 @@ public class LogonCommand : AuthenticationCommandBase
 
             // Add session to the database
             _sessionService.AddSession(session);
-
-            // Update the IsConnected field in the Users table
-            await UpdateUserConnectionStatusAsync(username, true);
+            
             _logger.LogInfo($"User {username} logged on at {DateTime.Now}");
         }
         else
