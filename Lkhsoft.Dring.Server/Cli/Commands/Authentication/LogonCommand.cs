@@ -48,18 +48,24 @@ public class LogonCommand : AuthenticationCommandBase
             return;
         }
 
-
         if (await AuthenticateUserAsync(username, password))
         {
             Console.WriteLine("LOGON command executed. You are now logged on.");
-            // Create a session for the user
             var session = new Session(username);
             session.Start();
-
-            // Add session to the database
             _sessionService.AddSession(session);
-            
+
+            // Register the session callback
+            _sessionService.RegisterSessionCallback(x =>
+            {
+                Console.WriteLine($"Session callback triggered for user {x.Username}");
+                _sessionService.RemoveSession(x);
+            });
+
             _logger.LogInfo($"User {username} logged on at {DateTime.Now}");
+
+            // Run the session
+            await Program.RunSession(session);
         }
         else
         {
@@ -67,6 +73,7 @@ public class LogonCommand : AuthenticationCommandBase
             _logger.LogError($"Authentication failed for user {username} at {DateTime.Now}");
         }
     }
+
 
     /// <summary>
     ///     Launch the user authentication process

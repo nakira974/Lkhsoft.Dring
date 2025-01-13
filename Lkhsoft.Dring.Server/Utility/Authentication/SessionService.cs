@@ -11,7 +11,11 @@ namespace Lkhsoft.Dring.Server.Utility;
 [PartCreationPolicy(CreationPolicy.Shared)]
 public class SessionService : ISessionService
 {
-    [Import] private IAppLogger _logger { get; set; }
+    /// <summary>
+    /// App logger
+    /// </summary>
+    [Import]
+    private IAppLogger _logger { get; set; }
 
     /// <summary>
     /// List of sessions for the current instance
@@ -24,6 +28,11 @@ public class SessionService : ISessionService
     private readonly string _connectionString;
 
     /// <summary>
+    /// Session callback
+    /// </summary>
+    private Action<Session>? _sessionCallback;
+
+    /// <summary>
     /// Default constructor
     /// </summary>
     public SessionService()
@@ -32,6 +41,19 @@ public class SessionService : ISessionService
         _connectionString = ConfigurationManager.ConnectionStrings["ServerDB"].ConnectionString;
     }
 
+    /// <inheritdoc />
+    public void RegisterSessionCallback(Action<Session> callback)
+    {
+        _sessionCallback = callback;
+    }
+
+    /// <inheritdoc />
+    public void TriggerSessionCallback(Session session)
+    {
+        _sessionCallback?.Invoke(session);
+    }
+
+    ///<inheritdoc />
     public Session? GetSessionByUsername(string username)
     {
         return _sessions.FirstOrDefault(s => s.Username == username);
@@ -101,7 +123,7 @@ public class SessionService : ISessionService
     /// <summary>
     ///     Update the session end time in the database
     /// </summary>
-    /// <param name="id">Session to be logged off/param>
+    /// <param name="id">Session to be logged off/param"</param>
     private async Task UpdateSessionEndTimeAsync(string id)
     {
         await using var connection = new SQLiteConnection(_connectionString);
@@ -113,5 +135,19 @@ public class SessionService : ISessionService
         command.Parameters.AddWithValue("@SessionId", id);
 
         await command.ExecuteNonQueryAsync();
+    }
+
+    ///<inheritdoc />
+    public async Task<string?> GetUserRoleAsync(string username)
+    {
+        await using var connection = new SQLiteConnection(_connectionString);
+        await connection.OpenAsync();
+
+        var query = "SELECT Role FROM Users WHERE Username = @Username";
+        await using var command = new SQLiteCommand(query, connection);
+        command.Parameters.AddWithValue("@Username", username);
+
+        var role = await command.ExecuteScalarAsync() as string;
+        return role;
     }
 }

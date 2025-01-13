@@ -46,11 +46,9 @@ public class ISPFCommand : CommandBase
                 {
                     case "1":
                         Console.WriteLine("Utilities selected");
-                        // Ajoutez ici la logique pour les utilitaires
                         continue;
                     case "2":
                         Console.WriteLine("Foreground selected");
-                        // Ajoutez ici la logique pour le foreground
                         continue;
                     case "3":
                         Console.WriteLine("Batch selected");
@@ -59,19 +57,15 @@ public class ISPFCommand : CommandBase
                         continue;
                     case "4":
                         Console.WriteLine("TSO selected");
-                        // Ajoutez ici la logique pour TSO
                         continue;
                     case "5":
                         Console.WriteLine("Command selected");
-                        // Ajoutez ici la logique pour les commandes
                         continue;
                     case "6":
                         Console.WriteLine("Program Management selected");
-                        // Ajoutez ici la logique pour la gestion des programmes
                         continue;
                     case "7":
                         Console.WriteLine("System Management selected");
-                        // Ajoutez ici la logique pour la gestion du système
                         continue;
                     case "8":
                         Console.WriteLine("Exiting ISPF");

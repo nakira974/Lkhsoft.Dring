@@ -23,27 +23,35 @@ public class LogoffCommand : AuthenticationCommandBase
     /// <inheritdoc />
     public override async void Execute(params string[] args)
     {
-        if (args.Length < 1)
+        if (args.Length > 0)
         {
-            Console.WriteLine("Usage: LOGOFF <username>");
+            Console.WriteLine("Usage: LOGOFF");
             return;
         }
 
-        var username = args[0];
-
-        // Récupérer la session active pour l'utilisateur
-        var session = _sessionService.GetSessionByUsername(username);
-        if (session == null)
+        Session? session;
+        try
         {
-            Console.WriteLine($"No active session found for user {username}");
+            session = _sessionService.GetSessionByUsername(Program.CurrentSession?.Username ??
+                                                           throw new InvalidOperationException(
+                                                               "No active session found"));
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"{ex.Message}");
+            _logger.LogWarning($"LOGOFF attempt failed, ${ex.Message}");
             return;
         }
 
-        _logger.LogInfo($"User {username} logged off at {DateTime.Now}");
+        if (session is null)
+        {
+            Console.WriteLine("No active session found.");
+            return;
+        }
 
-        // Mettre à jour la session en la retirant
+        _logger.LogInfo($"User {session.Username} logged off at {DateTime.Now}");
         _sessionService.RemoveSession(session);
-        _logger.LogInfo($"Session for {username} removed");
+        _logger.LogInfo($"Session for {session.Username} removed");
 
         Console.WriteLine("LOGOFF command executed. You are now logged off.");
     }
