@@ -1,5 +1,6 @@
 using System.ComponentModel.Composition;
 using System.Globalization;
+using Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 using Lkhsoft.Dring.Server.Utility;
 
 namespace Lkhsoft.Dring.Server.Cli.Commands;
@@ -7,6 +8,7 @@ namespace Lkhsoft.Dring.Server.Cli.Commands;
 /// <summary>
 ///     HELP command implementation
 /// </summary>
+[AuthorizedCommand(AuthorizationType.Guest, AuthorizationType.User, AuthorizationType.Admin)]
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "HELP")]
 [ExportMetadata("CommandAlias", "?")]
@@ -16,7 +18,7 @@ public class HelpCommand : CommandBase
     /// Enumeration of all commands
     /// </summary>
     [ImportMany] private IEnumerable<Lazy<ICommand, ICommandMetadata>> _commandImports;
-    
+
     /// <inheritdoc />
     public override void Execute(params string[] args)
     {

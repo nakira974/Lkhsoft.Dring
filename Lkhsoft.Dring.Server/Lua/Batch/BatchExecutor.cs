@@ -15,7 +15,7 @@ public class BatchExecutor
     /// Batch scripts to be executed
     /// </summary>
     private IEnumerable<BatchScript> _batchScripts;
-    
+
     /// <summary>
     /// Scheduled batch execution times
     /// </summary>
@@ -53,16 +53,14 @@ public class BatchExecutor
     /// </summary>
     /// <param name="batchScript">Batch script to be executed</param>
     /// <param name="scheduledTime">Execution date time</param>
-    private void ScheduleBatchExecution(BatchScript batchScript, DateTime scheduledTime, Subject<string> completionSubject)
+    private void ScheduleBatchExecution(BatchScript batchScript, DateTime scheduledTime,
+        Subject<string> completionSubject)
     {
         var delay = scheduledTime - DateTime.Now;
         if (delay > TimeSpan.Zero)
         {
             // Si l'exécution doit être différée, planifier une tâche après le délai
-            Task.Delay(delay).ContinueWith(_ =>
-            {
-                ExecuteLuaScript(batchScript, completionSubject);
-            });
+            Task.Delay(delay).ContinueWith(_ => { ExecuteLuaScript(batchScript, completionSubject); });
         }
         else
         {
@@ -79,7 +77,7 @@ public class BatchExecutor
     {
         var configLoader = DefaultContainer.Get<BatchConfigLoader>();
         var luaScriptPath = String.Empty;
-        
+
         if (OperatingSystem.IsWindows())
         {
             luaScriptPath = String.Format(CultureInfo.CurrentCulture, "{0}\\{1}", configLoader?.BatchConfig.Path,
@@ -98,19 +96,20 @@ public class BatchExecutor
 
         if (String.IsNullOrWhiteSpace(luaScriptPath) || !File.Exists(luaScriptPath))
         {
-            Console.WriteLine($"Lua script { script } not found");
+            Console.WriteLine($"Lua script {script} not found");
             return;
         }
+
         var luaScript = File.ReadAllText(luaScriptPath);
 
         try
         {
             using var lua = new NLua.Lua();
-            
+
             lua.NewTable("arg");
 
             var outputAllowedConfig = ConfigurationManager.AppSettings["BatchOutputAllowed"] ?? "False";
-            
+
             _ = Boolean.TryParse(outputAllowedConfig, out var outputAllowed);
 
             if (!outputAllowed)
@@ -118,12 +117,12 @@ public class BatchExecutor
                 // Ne pas afficher la sortie standard de lua pour les batches
                 lua.DoString("print = function() end");
             }
-           
-            for(byte i = 0; i < script.Parameters.Count(); i++)
+
+            for (byte i = 0; i < script.Parameters.Count(); i++)
             {
                 lua[$"arg[{i}]"] = script.Parameters.ElementAt(i).DefaultValue;
             }
-           
+
             lua.DoString(luaScript);
             completionSubject.OnNext($"Lua script {script} executed successfully.");
         }

@@ -1,8 +1,5 @@
 using System.ComponentModel.Composition;
 using System.Data.SQLite;
-using System.Security;
-using System.Security.Cryptography;
-using System.Text;
 using Lkhsoft.Dring.Server.Utility;
 
 namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
@@ -10,11 +7,19 @@ namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 /// <summary>
 ///     LOGON command implementation
 /// </summary>
+[AuthorizedCommand(AuthorizationType.Guest)]
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "LOGON")]
 [ExportMetadata("CommandAlias", "SU")]
+[PartCreationPolicy(CreationPolicy.NonShared)]
 public class LogonCommand : AuthenticationCommandBase
 {
+    /// <summary>
+    /// Session service
+    /// </summary>
+    [Import]
+    private ISessionService _sessionService { get; set; }
+
     /// <summary>
     ///     Default constructor
     /// </summary>
@@ -42,8 +47,7 @@ public class LogonCommand : AuthenticationCommandBase
         {
             return;
         }
-        
-        
+
 
         if (await AuthenticateUserAsync(username, password))
         {
@@ -53,7 +57,7 @@ public class LogonCommand : AuthenticationCommandBase
             session.Start();
 
             // Add session to the database
-            await AddSessionToDatabaseAsync(session);
+            _sessionService.AddSession(session);
 
             // Update the IsConnected field in the Users table
             await UpdateUserConnectionStatusAsync(username, true);
@@ -86,25 +90,6 @@ public class LogonCommand : AuthenticationCommandBase
         return Convert.ToInt32(result) > 0;
     }
 
-   
-    /// <summary>
-    /// Add the newly created session to the database
-    /// </summary>
-    /// <param name="session">Created session</param>
-    private async Task AddSessionToDatabaseAsync(Session session)
-    {
-        await using var connection = new SQLiteConnection(ConnectionString);
-        await connection.OpenAsync();
-
-        var query = "INSERT INTO Sessions (SessionId, Username, StartTime) VALUES (@SessionId, @Username, @StartTime)";
-        await using var command = new SQLiteCommand(query, connection);
-        command.Parameters.AddWithValue("@SessionId", Guid.NewGuid().ToString());
-        command.Parameters.AddWithValue("@Username", session.Username);
-        command.Parameters.AddWithValue("@StartTime", session.StartTime);
-
-        await command.ExecuteNonQueryAsync();
-    }
-    
     /// <summary>
     /// Get user initialization vector
     /// </summary>

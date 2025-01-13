@@ -13,5 +13,5 @@ nlog:
       archiveAboveSize: 10000000  # Taille du fichier avant archivage
   rules:
     - logger: "*"
-      minLevel: Debug
+      minLevel: Trace
       writeTo: file

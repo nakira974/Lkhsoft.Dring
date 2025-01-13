@@ -9,12 +9,12 @@ public class BatchParameter
     /// Parameter name
     /// </summary>
     public string Name { get; set; }
-    
+
     /// <summary>
     /// Parameter type
     /// </summary>
     public string Type { get; set; }
-    
+
     /// <summary>
     /// Parameter default value
     /// </summary>

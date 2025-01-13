@@ -15,47 +15,37 @@ public class ConsoleEventHandler
     ///     Is exit requested ?
     /// </summary>
     private static bool _exitRequested;
-    
+
     /// <summary>
     /// Commands history
     /// </summary>
     private static LinkedList<string> _history = new LinkedList<string>();
-    
+
     /// <summary>
     /// Current history index
     /// </summary>
     private static LinkedListNode<string> _currentHistoryNode = null;
-    
+
     /// <summary>
     /// Map of AES keys by version number
     /// </summary>
     private static readonly Dictionary<int, byte[]> KeyVersions = new Dictionary<int, byte[]>
     {
-        { 1, Convert.FromBase64String("9WpFqL8J7g5dYq8B5jK9nl6jPjdMN1FobNfhz0axdkM=") },
-        { 2, Convert.FromBase64String("tDF3v6G3PqNbIh7D8HSTGpN9oYfrXfH76nboydHpCeY=") }
+        {1, Convert.FromBase64String("9WpFqL8J7g5dYq8B5jK9nl6jPjdMN1FobNfhz0axdkM=")},
+        {2, Convert.FromBase64String("tDF3v6G3PqNbIh7D8HSTGpN9oYfrXfH76nboydHpCeY=")}
     };
-    
+
     private static readonly byte[] FixedIV = Encoding.UTF8.GetBytes("0123456789abcdef");
-    
+
     /// <summary>
     /// Current key version
     /// </summary>
     private static readonly int CurrentKeyVersion = 2;
 
     /// <summary>
-    ///     Setup console event handlers
+    /// Read a line from the console with command history support.
     /// </summary>
-    public static void SetupConsoleEventHandlers()
-    {
-        // Désactiver le traitement par défaut de Ctrl+C
-        Console.CancelKeyPress += (sender, args) => args.Cancel = true;
-    }
-
-
-        /// <summary>
-        /// Read a line from the console with command history support.
-        /// </summary>
-        public static string ReadLine()
+    public static string ReadLine()
     {
         var input = string.Empty;
         _currentHistoryNode = null; // Réinitialise la position dans l'historique
@@ -145,7 +135,7 @@ public class ConsoleEventHandler
             Thread.Sleep(100);
         }
     }
-        
+
     /// <summary>
     /// Runs the file navigator
     /// </summary>
@@ -295,7 +285,9 @@ public class ConsoleEventHandler
         try
         {
             // Convertir le SecureString en texte clair temporairement
-            secureStringPointer = Marshal.SecureStringToGlobalAllocUnicode(secureString ?? throw new ArgumentNullException(nameof(secureString)));
+            secureStringPointer =
+                Marshal.SecureStringToGlobalAllocUnicode(secureString ??
+                                                         throw new ArgumentNullException(nameof(secureString)));
             var plainText = Marshal.PtrToStringUni(secureStringPointer);
 
             using var aes = Aes.Create();
@@ -305,7 +297,7 @@ public class ConsoleEventHandler
             aes.Padding = PaddingMode.PKCS7;
 
             using var memoryStream = new MemoryStream();
-            memoryStream.WriteByte((byte)version); // Écrit la version au début
+            memoryStream.WriteByte((byte) version); // Écrit la version au début
             memoryStream.Write(aes.IV, 0, aes.IV.Length); // Écrit l'IV
 
             using (var cryptoStream = new CryptoStream(memoryStream, aes.CreateEncryptor(), CryptoStreamMode.Write))
