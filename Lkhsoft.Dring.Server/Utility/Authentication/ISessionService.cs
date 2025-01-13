@@ -26,4 +26,23 @@ public interface ISessionService
     ///     Gets a session by its username
     /// </summary>
     public Session? GetSessionByUsername(string username);
+
+    /// <summary>
+    /// Register a session callback
+    /// </summary>
+    /// <param name="callback">Callback of session logon</param>
+    public void RegisterSessionCallback(Action<Session> callback);
+
+    /// <summary>
+    /// Trigger the session callback
+    /// </summary>
+    /// <param name="session">Session to be triggered</param>
+    public void TriggerSessionCallback(Session session);
+
+    /// <summary>
+    /// Gets the role of a user by username
+    /// </summary>
+    /// <param name="username">Username to get the role for</param>
+    /// <returns>Role of the user</returns>
+    public Task<string?> GetUserRoleAsync(string username);
 }

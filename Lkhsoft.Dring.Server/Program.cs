@@ -1,6 +1,7 @@
 ﻿using System.Collections.Concurrent;
 using System.Configuration;
 using System.Data.SQLite;
+using System.Globalization;
 using System.Net;
 using System.Net.Sockets;
 using System.Security;
@@ -73,6 +74,11 @@ internal class Program
     private static readonly X509Certificate2? ServerCertificate = LoadCertificate();
 
     /// <summary>
+    /// Main server session
+    /// </summary>
+    public static Session? CurrentSession { get; private set; }
+
+    /// <summary>
     ///     Main server task executing CLI and network tasks
     /// </summary>
     private static async Task Main(string[] args)
@@ -94,15 +100,14 @@ internal class Program
         _semaphore.Release();
         Console.WriteLine("CLI Ready. Type 'exit' to quit.");
         _logger.LogInfo($"Server started on ports TCP:{TcpPort} and UDP:{UdpPort}");
-        ;
 
         var commandParser = new CommandParser();
-
         SetupSignalHandlers();
+        CurrentSession = new Session("guest");
 
         while (true)
         {
-            Console.Write("instance/admin > ");
+            Console.Write("dring/guest > ");
             var input = ConsoleEventHandler.ReadLine();
             _logger.LogInfo($"Received command: {input ?? "EXIT"}");
             if (input is null)
@@ -118,6 +123,39 @@ internal class Program
     }
 
     /// <summary>
+    /// User CLI session
+    /// </summary>
+    /// <param name="session">User session</param>
+    public static async Task RunSession(Session session)
+    {
+        CurrentSession = session;
+        var commandParser = new CommandParser();
+        var sessionService = DefaultContainer.Get<ISessionService>();
+        sessionService?.RegisterSessionCallback(x =>
+        {
+            sessionService.RemoveSession(x);
+            CurrentSession = new Session("guest");
+        });
+
+        while (true)
+        {
+            Console.Write($"dring/{session.Username} > ");
+            var input = ConsoleEventHandler.ReadLine();
+            _logger.LogInfo($"Received command: {input ?? "EXIT"}");
+            if (input is null || input.ToUpper(CultureInfo.CurrentCulture) is "LOGOFF")
+            {
+                commandParser.ParseAndExecute("LOGOFF");
+                break;
+            }
+
+            commandParser.ParseAndExecute(input);
+        }
+
+        Console.WriteLine("Shutting down session...");
+        CurrentSession = null;
+    }
+
+    /// <summary>
     ///     Receives messages from TCP clients
     /// </summary>
     private static async Task ReceiveTcp()
@@ -125,7 +163,7 @@ internal class Program
         await _semaphore.WaitAsync();
         var listener = new TcpListener(IPAddress.Any, TcpPort);
         listener.Start();
-        Console.WriteLine("TCP listener started on port 12345.");
+        Console.WriteLine($"TCP listener started on port {TcpPort}.");
 
         _semaphore.Release();
         while (true)
@@ -162,7 +200,7 @@ internal class Program
     {
         await _semaphore.WaitAsync();
         var udpListener = new UdpClient(UdpPort);
-        Console.WriteLine("UDP listener started on port 54321.");
+        Console.WriteLine($"UDP listener started on port {UdpPort}.");
 
         _semaphore.Release();
         while (true)
