@@ -3,7 +3,7 @@ namespace Lkhsoft.Dring.Server.Utility;
 /// <summary>
 ///     Server session model
 /// </summary>
-public class Session
+public class Session : IComparable<Session>
 {
     /// <summary>
     ///     Default constructor
@@ -11,8 +11,14 @@ public class Session
     /// <param name="username">Username authenticated</param>
     public Session(string username)
     {
+        Id = Guid.NewGuid();
         Username = username;
     }
+    
+    /// <summary>
+    /// Session ID
+    /// </summary>
+    public Guid Id { get; init; }
 
     /// <summary>
     ///     Username of the user
@@ -45,5 +51,11 @@ public class Session
     {
         EndTime = DateTime.Now;
         Console.WriteLine($"Session ended for user {Username} at {EndTime}");
+    }
+
+    ///<inheritdoc />
+    public int CompareTo(Session? other)
+    {
+        return String.CompareOrdinal(Id.ToString(), other?.ToString());
     }
 }

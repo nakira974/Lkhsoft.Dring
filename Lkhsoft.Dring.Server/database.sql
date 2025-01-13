@@ -9,6 +9,10 @@ CREATE TABLE IF NOT EXISTS Users
     TEXT
     NOT
     NULL,
+    Role
+    TEXT
+    NOT
+    NULL,
     IsConnected
     INTEGER
     NOT

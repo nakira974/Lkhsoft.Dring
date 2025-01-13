@@ -6,6 +6,7 @@ namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 /// <summary>
 ///     DELUSER command implementation
 /// </summary>
+[AuthorizedCommand(AuthorizationType.Admin)]
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "DELUSER")]
 [ExportMetadata("CommandAlias", "")]

@@ -1,17 +1,24 @@
 using System.ComponentModel.Composition;
 using System.Data.SQLite;
+using Lkhsoft.Dring.Server.Utility;
 
 namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 
 /// <summary>
 ///     LOGOFF command implementation
 /// </summary>
+[AuthorizedCommand(AuthorizationType.User, AuthorizationType.Admin)]
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "LOGOFF")]
 [ExportMetadata("CommandAlias", "LOGOUT")]
+[PartCreationPolicy(CreationPolicy.NonShared)]
 public class LogoffCommand : AuthenticationCommandBase
 {
-    private readonly string _connectionString = "Data Source=users.db;Version=3;";
+    /// <summary>
+    /// Session service
+    /// </summary>
+    [Import]
+    private ISessionService _sessionService { get; set; }
 
     /// <inheritdoc />
     public override async void Execute(params string[] args)
@@ -24,30 +31,22 @@ public class LogoffCommand : AuthenticationCommandBase
 
         var username = args[0];
 
+        // Récupérer la session active pour l'utilisateur
+        var session = _sessionService.GetSessionByUsername(username);
+        if (session == null)
+        {
+            Console.WriteLine($"No active session found for user {username}");
+            return;
+        }
+
         // Update the IsConnected field in the Users table
         await UpdateUserConnectionStatusAsync(username, false);
         _logger.LogInfo($"User {username} logged off at {DateTime.Now}");
 
-        // Update the session end time in the Sessions table
-        await UpdateSessionEndTimeAsync(username);
+        // Mettre à jour la session en la retirant
+        _sessionService.RemoveSession(session);
+        _logger.LogInfo($"Session for {username} removed");
 
         Console.WriteLine("LOGOFF command executed. You are now logged off.");
-    }
-
-    /// <summary>
-    ///     Update the session end time in the database
-    /// </summary>
-    /// <param name="username">Disconnected user</param>
-    private async Task UpdateSessionEndTimeAsync(string username)
-    {
-        await using var connection = new SQLiteConnection(_connectionString);
-        await connection.OpenAsync();
-
-        var query = "UPDATE Sessions SET EndTime = @EndTime WHERE Username = @Username AND EndTime IS NULL";
-        await using var command = new SQLiteCommand(query, connection);
-        command.Parameters.AddWithValue("@EndTime", DateTime.Now);
-        command.Parameters.AddWithValue("@Username", username);
-
-        await command.ExecuteNonQueryAsync();
     }
 }

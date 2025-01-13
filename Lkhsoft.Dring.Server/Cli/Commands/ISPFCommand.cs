@@ -1,5 +1,6 @@
 using System.ComponentModel.Composition;
 using System.Configuration;
+using Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 using Lkhsoft.Dring.Server.Lua.Batch;
 
 namespace Lkhsoft.Dring.Server.Cli.Commands;
@@ -7,6 +8,7 @@ namespace Lkhsoft.Dring.Server.Cli.Commands;
 /// <summary>
 ///     ISPF command implementation
 /// </summary>
+[AuthorizedCommand(AuthorizationType.User, AuthorizationType.Admin)]
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "ISPF")]
 [ExportMetadata("CommandAlias", "")]
