@@ -16,10 +16,19 @@ namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 public class LogoffCommand : AuthenticationCommandBase
 {
     /// <summary>
-    /// Session service
+    ///     Session service
     /// </summary>
-    [Import]
-    private IContextAccessor _ContextAccessor { get; set; }
+    private readonly IContextAccessor _contextAccessor;
+
+    /// <summary>
+    ///     Default constructor
+    /// </summary>
+    /// <param name="contextAccessor">IContextAccessor part</param>
+    [ImportingConstructor]
+    public LogoffCommand([Import] IContextAccessor contextAccessor)
+    {
+        _contextAccessor = contextAccessor;
+    }
 
     /// <inheritdoc />
     public override async void Execute(params string[] args)
@@ -33,7 +42,7 @@ public class LogoffCommand : AuthenticationCommandBase
         Session? session;
         try
         {
-            session = _ContextAccessor.GetSession();
+            session = _contextAccessor.GetSession();
         }
         catch (Exception ex)
         {
@@ -43,7 +52,7 @@ public class LogoffCommand : AuthenticationCommandBase
         }
 
         _logger.LogInfo($"User {session.Username} logged off at {DateTime.Now}");
-        _ContextAccessor.Unregister();
+        _contextAccessor.Unregister();
         _logger.LogInfo($"Session for {session.Username} removed");
 
         Console.WriteLine("LOGOFF command executed. You are now logged off.");

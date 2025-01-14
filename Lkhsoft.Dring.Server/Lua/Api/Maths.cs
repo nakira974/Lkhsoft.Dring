@@ -5,7 +5,7 @@ namespace Lkhsoft.Dring.Server.Lua.Api;
 /// <summary>
 ///     Lua math function
 /// </summary>
-[Export(typeof(ILuaDelegate))] // Une autre fonction d'extension
+[Export(typeof(ILuaDelegate))]
 public class AddFunction : ILuaDelegate
 {
     /// <inheritdoc />

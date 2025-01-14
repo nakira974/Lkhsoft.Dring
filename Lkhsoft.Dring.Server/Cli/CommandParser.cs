@@ -3,6 +3,7 @@ using Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 using Lkhsoft.Dring.Server.Utility;
 using Lkhsoft.Dring.Server.Utility.Authentication;
 using Lkhsoft.Dring.Server.Utility.Core;
+using Lkhsoft.Dring.Server.Utility.Logger;
 
 namespace Lkhsoft.Dring.Server.Cli;
 
@@ -31,7 +32,7 @@ public class CommandParser
     ///     Session service
     /// </summary>
     [Import]
-    private ISessionService _sessionService { get; set; }
+    private IContextAccessor _contextAccessor { get; set; }
 
     /// <summary>
     ///     Session container
@@ -45,6 +46,7 @@ public class CommandParser
     {
         _sessionContainer = new SessionContainer();
         _sessionContainer.ComposeParts(this);
+        _contextAccessor.RegisterCliSession(this);
 
         _commands = (_commandImports ?? throw new InvalidOperationException("CLI commands import failed"))
             .SelectMany(import =>
@@ -63,6 +65,15 @@ public class CommandParser
                 return commands;
             })
             .ToDictionary(command => command.Key, command => command.Value);
+    }
+
+    /// <summary>
+    ///   Get the current CLI session
+    /// </summary>
+    /// <returns></returns>
+    public Session GetUserSession()
+    {
+        return _contextAccessor.GetSession();
     }
 
     /// <summary>
@@ -89,15 +100,13 @@ public class CommandParser
                         .GetCustomAttributes(typeof(AuthorizedCommandAttribute), true)
                         .FirstOrDefault() is AuthorizedCommandAttribute authorizedCommandAttribute)
                 {
-                    var userRole = await _sessionService.GetUserRoleAsync(Program.CurrentSession?.Username ??
-                                                                          throw new InvalidOperationException(
-                                                                              "No session has been found"));
+                    var userRole = await _contextAccessor.GetRole();
                     if (userRole is null || !Enum.TryParse(userRole, out AuthorizationType userAuthorizationType) ||
                         !authorizedCommandAttribute.Authorizations.Contains(userAuthorizationType))
                     {
                         Console.WriteLine("You do not have the required authorization to execute this command");
                         _logger.LogWarning(
-                            $"Unauthorized command attempt: {command} by user {Program.CurrentSession?.Username}");
+                            $"Unauthorized command attempt: {command} by user {_contextAccessor.GetSession().Username}");
                         return;
                     }
                 }

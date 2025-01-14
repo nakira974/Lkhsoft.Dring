@@ -1,7 +1,9 @@
 using System.ComponentModel.Composition;
+using System.Security;
 using Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 using Lkhsoft.Dring.Server.Utility;
 using Lkhsoft.Dring.Server.Utility.Authentication;
+using Lkhsoft.Dring.Server.Utility.Core;
 
 namespace Lkhsoft.Dring.Server.Cli.Commands;
 
@@ -17,7 +19,16 @@ public class ExitCommand : CommandBase
     /// <summary>
     /// Session service
     /// </summary>
-    [Import] private ISessionService _sessionService;
+    private readonly ISessionService _sessionService;
+
+    /// <summary>
+    ///     Default constructor
+    /// </summary>
+    public ExitCommand()
+    {
+        _sessionService = DefaultContainer.Get<ISessionService>() ??
+                          throw new SecurityException("Global session service not found");
+    }
 
     /// <inheritdoc />
     public override void Execute(params string[] args)

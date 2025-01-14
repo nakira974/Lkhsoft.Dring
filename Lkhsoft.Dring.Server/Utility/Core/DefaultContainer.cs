@@ -1,6 +1,7 @@
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.Configuration;
+using Lkhsoft.Dring.Server.Utility.Logger;
 using NLog;
 
 namespace Lkhsoft.Dring.Server.Utility.Core;
@@ -11,7 +12,7 @@ namespace Lkhsoft.Dring.Server.Utility.Core;
 public class DefaultContainer
 {
     // Logger NLog
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
     // Verrou pour assurer la synchronisation de l'écriture dans le log
     private static readonly object LockObject = new();

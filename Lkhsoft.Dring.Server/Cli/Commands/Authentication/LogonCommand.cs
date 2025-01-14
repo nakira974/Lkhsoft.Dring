@@ -18,14 +18,15 @@ public class LogonCommand : AuthenticationCommandBase
     /// <summary>
     /// Session service
     /// </summary>
-    [Import]
-    private IContextAccessor _contextAccessor { get; set; }
+    private readonly IContextAccessor _contextAccessor;
 
     /// <summary>
     ///     Default constructor
     /// </summary>
-    public LogonCommand()
+    [ImportingConstructor]
+    public LogonCommand([Import] IContextAccessor contextAccessor)
     {
+        _contextAccessor = contextAccessor;
     }
 
     /// <inheritdoc />
@@ -53,13 +54,12 @@ public class LogonCommand : AuthenticationCommandBase
         {
             Console.WriteLine("LOGON command executed. You are now logged on.");
             var session = new Session(username);
-            session.Start();
             _contextAccessor.Register(session);
 
             _logger.LogInfo($"User {username} logged on at {DateTime.Now}");
 
             // Run the session
-            await Program.RunSession(session);
+            await Program.RunSession(_contextAccessor.GetCliSession());
         }
         else
         {

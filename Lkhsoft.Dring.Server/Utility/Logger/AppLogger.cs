@@ -1,7 +1,7 @@
 using System.ComponentModel.Composition;
 using NLog;
 
-namespace Lkhsoft.Dring.Server.Utility;
+namespace Lkhsoft.Dring.Server.Utility.Logger;
 
 /// <summary>
 ///     Logging methods implementation
@@ -13,7 +13,7 @@ public class AppLogger : IAppLogger
     /// <summary>
     ///     App logger
     /// </summary>
-    private static readonly ILogger _logger = LogManager.GetCurrentClassLogger();
+    private static readonly ILogger Logger = LogManager.GetCurrentClassLogger();
 
     /// <summary>
     ///     Default constructor
@@ -26,36 +26,36 @@ public class AppLogger : IAppLogger
     /// <inheritdoc />
     public void LogInfo(string message)
     {
-        _logger.Info(message);
+        Logger.Info(message);
     }
 
     /// <inheritdoc />
     public void LogError(string message)
     {
-        _logger.Error(message);
+        Logger.Error(message);
     }
 
     /// <inheritdoc />
     public void LogWarning(string message)
     {
-        _logger.Warn(message);
+        Logger.Warn(message);
     }
 
     /// <inheritdoc />
     public void LogDebug(string message)
     {
-        _logger.Debug(message);
+        Logger.Debug(message);
     }
 
     /// <inheritdoc />
     public void LogFatal(string message)
     {
-        _logger.Fatal(message);
+        Logger.Fatal(message);
     }
 
     /// <inheritdoc />
     public void LogTrace(string message)
     {
-        _logger.Trace(message);
+        Logger.Trace(message);
     }
 }

@@ -5,7 +5,7 @@ using NLog.Targets;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-namespace Lkhsoft.Dring.Server.Utility;
+namespace Lkhsoft.Dring.Server.Utility.Logger;
 
 /// <summary>
 ///     Configurator for NLog
@@ -15,7 +15,7 @@ public static class NLogConfigurator
     /// <summary>
     ///     Logger NLog
     /// </summary>
-    private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
+    private static readonly NLog.Logger Logger = LogManager.GetCurrentClassLogger();
 
     /// <summary>
     ///     Configure NLog from a YAML file

@@ -12,6 +12,7 @@ using Lkhsoft.Dring.Server.Cli;
 using Lkhsoft.Dring.Server.Utility;
 using Lkhsoft.Dring.Server.Utility.Authentication;
 using Lkhsoft.Dring.Server.Utility.Core;
+using Lkhsoft.Dring.Server.Utility.Logger;
 
 namespace Lkhsoft.Dring.Server;
 
@@ -75,10 +76,6 @@ internal class Program
     /// </summary>
     private static readonly X509Certificate2? ServerCertificate = LoadCertificate();
 
-    /// <summary>
-    /// Main server session
-    /// </summary>
-    public static Session? CurrentSession { get; private set; }
 
     /// <summary>
     ///     Main server task executing CLI and network tasks
@@ -105,7 +102,7 @@ internal class Program
 
         var commandParser = new CommandParser();
         SetupSignalHandlers();
-        CurrentSession = new Session("guest");
+
         while (true)
         {
             Console.Write("dring/guest > ");
@@ -126,21 +123,12 @@ internal class Program
     /// <summary>
     /// User CLI session
     /// </summary>
-    /// <param name="session">User session</param>
-    public static async Task RunSession(Session session)
+    /// <param name="commandParser">User shell session</param>
+    public static async Task RunSession(CommandParser commandParser)
     {
-        CurrentSession = session;
-        var commandParser = new CommandParser();
-        var sessionService = DefaultContainer.Get<ISessionService>();
-        sessionService?.RegisterSessionCallback(x =>
-        {
-            sessionService.RemoveSession(x);
-            CurrentSession = new Session("guest");
-        });
-
         while (true)
         {
-            Console.Write($"dring/{session.Username} > ");
+            Console.Write($"dring/{commandParser.GetUserSession().Username} > ");
             var input = ConsoleEventHandler.ReadLine();
             _logger.LogInfo($"Received command: {input ?? "EXIT"}");
             if (input is null || input.ToUpper(CultureInfo.CurrentCulture) is "LOGOFF")
@@ -153,7 +141,6 @@ internal class Program
         }
 
         Console.WriteLine("Shutting down session...");
-        CurrentSession = null;
     }
 
     /// <summary>
@@ -338,8 +325,7 @@ internal class Program
             Console.WriteLine("Shutdown signal received. Cleaning up...");
             Console.WriteLine("Server is shutting down gracefully");
             DefaultContainer.Get<IAppLogger>()?.LogTrace("Shutdown signal received, server shut down gracefully");
-            var commandParser = new CommandParser();
-            commandParser.ParseAndExecute("EXIT");
+            DefaultContainer.Get<ISessionService>()?.ClearAllSessions();
         }
 
         Console.CancelKeyPress += (sender, e) =>

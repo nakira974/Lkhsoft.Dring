@@ -1,5 +1,6 @@
 using System.ComponentModel.Composition;
 using Lkhsoft.Dring.Server.Utility;
+using Lkhsoft.Dring.Server.Utility.Logger;
 
 namespace Lkhsoft.Dring.Server.Cli.Commands;
 
