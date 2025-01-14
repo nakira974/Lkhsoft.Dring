@@ -1,6 +1,7 @@
 using System.ComponentModel.Composition;
 using System.Configuration;
 using System.Data.SQLite;
+using Lkhsoft.Dring.Server.Utility.Authentication;
 
 namespace Lkhsoft.Dring.Server.Utility;
 

@@ -1,6 +1,7 @@
 using System.ComponentModel.Composition;
 using System.Data.SQLite;
 using Lkhsoft.Dring.Server.Utility;
+using Lkhsoft.Dring.Server.Utility.Authentication;
 
 namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 
@@ -18,7 +19,7 @@ public class LogoffCommand : AuthenticationCommandBase
     /// Session service
     /// </summary>
     [Import]
-    private ISessionService _sessionService { get; set; }
+    private IContextAccessor _ContextAccessor { get; set; }
 
     /// <inheritdoc />
     public override async void Execute(params string[] args)
@@ -32,9 +33,7 @@ public class LogoffCommand : AuthenticationCommandBase
         Session? session;
         try
         {
-            session = _sessionService.GetSessionByUsername(Program.CurrentSession?.Username ??
-                                                           throw new InvalidOperationException(
-                                                               "No active session found"));
+            session = _ContextAccessor.GetSession();
         }
         catch (Exception ex)
         {
@@ -43,14 +42,8 @@ public class LogoffCommand : AuthenticationCommandBase
             return;
         }
 
-        if (session is null)
-        {
-            Console.WriteLine("No active session found.");
-            return;
-        }
-
         _logger.LogInfo($"User {session.Username} logged off at {DateTime.Now}");
-        _sessionService.RemoveSession(session);
+        _ContextAccessor.Unregister();
         _logger.LogInfo($"Session for {session.Username} removed");
 
         Console.WriteLine("LOGOFF command executed. You are now logged off.");

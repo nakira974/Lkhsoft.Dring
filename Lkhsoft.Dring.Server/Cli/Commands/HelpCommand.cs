@@ -2,6 +2,7 @@ using System.ComponentModel.Composition;
 using System.Globalization;
 using Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 using Lkhsoft.Dring.Server.Utility;
+using Lkhsoft.Dring.Server.Utility.Authentication;
 
 namespace Lkhsoft.Dring.Server.Cli.Commands;
 
@@ -12,18 +13,19 @@ namespace Lkhsoft.Dring.Server.Cli.Commands;
 [Export(typeof(ICommand))]
 [ExportMetadata("CommandName", "HELP")]
 [ExportMetadata("CommandAlias", "?")]
+[PartCreationPolicy(CreationPolicy.Shared)]
 public class HelpCommand : CommandBase
 {
     /// <summary>
     /// Enumeration of all commands
     /// </summary>
     [ImportMany] private IEnumerable<Lazy<ICommand, ICommandMetadata>> _commandImports;
-    
+
     /// <summary>
     ///     Session service
     /// </summary>
     [Import]
-    private ISessionService _sessionService { get; set; }
+    private IContextAccessor _contextAccessor { get; set; }
 
     /// <inheritdoc />
     public override async void Execute(params string[] args)
@@ -35,7 +37,7 @@ public class HelpCommand : CommandBase
         }
 
         ICollection<Lazy<ICommand, ICommandMetadata>> authorizedCommands = new List<Lazy<ICommand, ICommandMetadata>>();
-        if (authorizedCommands == null) 
+        if (authorizedCommands == null)
             throw new ArgumentNullException(nameof(authorizedCommands));
 
         foreach (var currentCommand in _commandImports)
@@ -43,18 +45,17 @@ public class HelpCommand : CommandBase
             if (currentCommand.Value.GetType()
                     .GetCustomAttributes(typeof(AuthorizedCommandAttribute), true)
                     .FirstOrDefault() is not AuthorizedCommandAttribute authorizedCommandAttribute) continue;
-            
-            var userRole = await _sessionService.GetUserRoleAsync(Program.CurrentSession?.Username ??
-                                                                  throw new InvalidOperationException(
-                                                                      "No session has been found"));
+
+            var userRole = await _contextAccessor.GetRole();
             if (userRole is null || !Enum.TryParse(userRole, out AuthorizationType userAuthorizationType) ||
                 !authorizedCommandAttribute.Authorizations.Contains(userAuthorizationType))
             {
                 continue;
             }
+
             authorizedCommands.Add(currentCommand);
         }
-       
+
 
         if (args.Length == 0)
         {
@@ -67,7 +68,7 @@ public class HelpCommand : CommandBase
 
         if (File.Exists(helpFilePath))
         {
-            var helpContent = File.ReadAllText(helpFilePath);
+            var helpContent = await File.ReadAllTextAsync(helpFilePath);
             Console.WriteLine(helpContent);
         }
         else

@@ -1,4 +1,4 @@
-namespace Lkhsoft.Dring.Server.Utility;
+namespace Lkhsoft.Dring.Server.Utility.Authentication;
 
 /// <summary>
 /// Define the session service
