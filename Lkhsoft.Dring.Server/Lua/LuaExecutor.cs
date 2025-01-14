@@ -8,18 +8,27 @@ namespace Lkhsoft.Dring.Server.Lua;
 [Export(typeof(LuaExecutor))]
 public class LuaExecutor
 {
+    /// <summary>
+    ///     Lua state
+    /// </summary>
     private readonly NLua.Lua _luaState;
+
+    /// <summary>
+    ///     Lua delegates
+    /// </summary>
+    private readonly IEnumerable<ILuaDelegate> _luaDelegates;
 
     /// <summary>
     ///     Default constructor
     /// </summary>
-    public LuaExecutor()
+    [ImportingConstructor]
+    public LuaExecutor([ImportMany] IEnumerable<ILuaDelegate> luaDelegates)
     {
+        _luaDelegates = luaDelegates;
         _luaState = new NLua.Lua();
         RegisterFunctions();
     }
 
-    [ImportMany] public IEnumerable<ILuaDelegate> LuaDelegates { get; }
 
     /// <summary>
     ///     Registers discovered C# functions to Lua environment
@@ -27,7 +36,7 @@ public class LuaExecutor
     private void RegisterFunctions()
     {
         foreach (var function in
-                 LuaDelegates) function.Execute(_luaState); // Enregistrer chaque fonction dans l'environnement Lua
+                 _luaDelegates) function.Execute(_luaState); // Enregistrer chaque fonction dans l'environnement Lua
     }
 
     /// <summary>

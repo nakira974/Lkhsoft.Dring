@@ -3,7 +3,7 @@ namespace Lkhsoft.Dring.Server.Lua.Batch;
 /// <summary>
 /// Batch script parameter
 /// </summary>
-public class BatchParameter
+public sealed record BatchParameter
 {
     /// <summary>
     /// Parameter name

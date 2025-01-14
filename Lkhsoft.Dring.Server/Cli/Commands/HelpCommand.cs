@@ -17,15 +17,29 @@ namespace Lkhsoft.Dring.Server.Cli.Commands;
 public class HelpCommand : CommandBase
 {
     /// <summary>
-    /// Enumeration of all commands
+    ///     Enumeration of all commands
     /// </summary>
-    [ImportMany] private IEnumerable<Lazy<ICommand, ICommandMetadata>> _commandImports;
+    private readonly IEnumerable<Lazy<ICommand, ICommandMetadata>> _commandImports;
 
     /// <summary>
     ///     Session service
     /// </summary>
-    [Import]
-    private IContextAccessor _contextAccessor { get; set; }
+    private readonly IContextAccessor _contextAccessor;
+
+    /// <summary>
+    ///     Default constructor
+    /// </summary>
+    /// <param name="contextAccessor">IContextAccessor part</param>
+    /// <param name="commandImports"> ICommand parts</param>
+    [ImportingConstructor]
+    public HelpCommand(
+        [Import] IContextAccessor contextAccessor,
+        [ImportMany] IEnumerable<Lazy<ICommand, ICommandMetadata>> commandImports
+    )
+    {
+        _contextAccessor = contextAccessor;
+        _commandImports = commandImports;
+    }
 
     /// <inheritdoc />
     public override async void Execute(params string[] args)

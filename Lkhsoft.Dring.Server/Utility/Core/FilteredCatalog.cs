@@ -1,6 +1,6 @@
 using System.ComponentModel.Composition.Primitives;
 
-namespace Lkhsoft.Dring.Server.Utility;
+namespace Lkhsoft.Dring.Server.Utility.Core;
 
 /// <summary>
 ///     Filtered catalog for selecting parts based on their types

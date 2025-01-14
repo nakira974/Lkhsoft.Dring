@@ -15,10 +15,19 @@ namespace Lkhsoft.Dring.Server.Cli.Commands;
 public class ISPFCommand : CommandBase
 {
     /// <summary>
-    /// Batch configuration loader
+    ///     Batch configuration loader
     /// </summary>
-    [Import]
-    private BatchConfigLoader BatchConfigLoader { get; set; }
+    private readonly BatchConfigLoader _batchConfigLoader;
+
+    /// <summary>
+    ///     Default constructor
+    /// </summary>
+    /// <param name="batchConfigLoader">BatchConfigLoader part</param>
+    [ImportingConstructor]
+    public ISPFCommand([Import] BatchConfigLoader batchConfigLoader)
+    {
+        _batchConfigLoader = batchConfigLoader;
+    }
 
     /// <inheritdoc />
     public override void Execute(params string[] args)
@@ -118,7 +127,7 @@ public class ISPFCommand : CommandBase
         Console.WriteLine("Select a batch job to configure: ");
 
         // Liste des batchs disponibles
-        var batchList = BatchConfigLoader.BatchConfig.Batches.ToList();
+        var batchList = _batchConfigLoader.BatchConfig.Batches.ToList();
         for (ushort i = 0; i < batchList.Count; i++)
         {
             Console.WriteLine($"{i + 1}. {batchList[i].Name} - {batchList[i].Description}");
@@ -201,7 +210,7 @@ public class ISPFCommand : CommandBase
         // Charger la configuration des batchs
 
         // Créer le ThreadPool et distribuer les batchs
-        var batchExecutorPool = new BatchExecutorPool(BatchConfigLoader.BatchConfig.Batches, batchSchedule);
+        var batchExecutorPool = new BatchExecutorPool(_batchConfigLoader.BatchConfig.Batches, batchSchedule);
 
         // S'abonner à l'observable pour afficher les messages dans la console
         batchExecutorPool.CompletionObservable.Subscribe(message => { _logger.LogDebug(message); });

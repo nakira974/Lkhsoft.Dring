@@ -1,3 +1,5 @@
+using Lkhsoft.Dring.Server.Cli;
+
 namespace Lkhsoft.Dring.Server.Utility.Authentication;
 
 /// <summary>
@@ -25,4 +27,16 @@ public interface IContextAccessor
     ///     Returns the current role
     /// </summary>
     public Task<string?> GetRole();
+
+    /// <summary>
+    ///     Registers a new CLI session
+    /// </summary>
+    /// <param name="session">Session to be registered</param>
+    public void RegisterCliSession(CommandParser session);
+
+    /// <summary>
+    ///    Returns the current CLI session
+    /// </summary>
+    /// <returns>The current CLI session</returns>
+    public CommandParser GetCliSession();
 }

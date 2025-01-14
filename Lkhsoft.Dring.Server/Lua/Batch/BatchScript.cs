@@ -3,7 +3,7 @@ namespace Lkhsoft.Dring.Server.Lua.Batch;
 /// <summary>
 /// Represents a LUA batch script
 /// </summary>
-public class BatchScript
+public sealed record BatchScript
 {
     /// <summary>
     /// Script name

@@ -3,7 +3,7 @@ namespace Lkhsoft.Dring.Server.Lua.Batch;
 /// <summary>
 /// Batch script configuration
 /// </summary>
-public class BatchConfig
+public sealed record BatchConfig
 {
     /// <summary>
     /// Scripts folder path

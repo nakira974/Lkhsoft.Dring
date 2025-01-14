@@ -2,6 +2,7 @@ using System.ComponentModel.Composition;
 using System.Configuration;
 using System.Data.SQLite;
 using Lkhsoft.Dring.Server.Utility.Authentication;
+using Lkhsoft.Dring.Server.Utility.Logger;
 
 namespace Lkhsoft.Dring.Server.Utility;
 
@@ -15,8 +16,7 @@ public class SessionService : ISessionService
     /// <summary>
     /// App logger
     /// </summary>
-    [Import]
-    private IAppLogger _logger { get; set; }
+    private readonly IAppLogger _logger;
 
     /// <summary>
     /// List of sessions for the current instance
@@ -36,8 +36,10 @@ public class SessionService : ISessionService
     /// <summary>
     /// Default constructor
     /// </summary>
-    public SessionService()
+    [ImportingConstructor]
+    public SessionService([Import] IAppLogger logger)
     {
+        _logger = logger;
         _sessions = new HashSet<Session>();
         _connectionString = ConfigurationManager.ConnectionStrings["ServerDB"].ConnectionString;
     }
@@ -99,6 +101,7 @@ public class SessionService : ISessionService
     {
         foreach (var session in _sessions)
         {
+            session.End();
             RemoveSession(session);
         }
     }

@@ -1,4 +1,4 @@
-namespace Lkhsoft.Dring.Server.Utility;
+namespace Lkhsoft.Dring.Server.Utility.Logger;
 
 /// <summary>
 ///     Logging methods definition
