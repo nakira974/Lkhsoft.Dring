@@ -3,12 +3,12 @@ using System.ComponentModel.Composition.Hosting;
 using System.Configuration;
 using NLog;
 
-namespace Lkhsoft.Dring.Server.Utility;
+namespace Lkhsoft.Dring.Server.Utility.Core;
 
 /// <summary>
 ///     Server container that uses MEF to load parts
 /// </summary>
-public static class DefaultContainer
+public class DefaultContainer
 {
     // Logger NLog
     private static readonly Logger Logger = LogManager.GetCurrentClassLogger();
@@ -77,7 +77,7 @@ public static class DefaultContainer
         try
         {
             var export = Container.GetExport<T>();
-            if (export != null) return export.Value;
+            if (export is not null) return export.Value;
         }
         catch (Exception ex)
         {
@@ -94,7 +94,7 @@ public static class DefaultContainer
     /// <param name="configKeys">Configuration keys</param>
     /// <returns></returns>
     /// <exception cref="InvalidOperationException">Plugins path is invalid or missing</exception>
-    private static IEnumerable<DirectoryCatalog> ConfigurePlugins(params string[] configKeys)
+    public static IEnumerable<DirectoryCatalog> ConfigurePlugins(params string[] configKeys)
     {
         var catalogs = new List<DirectoryCatalog>(configKeys.Length);
         foreach (var configKey in configKeys)

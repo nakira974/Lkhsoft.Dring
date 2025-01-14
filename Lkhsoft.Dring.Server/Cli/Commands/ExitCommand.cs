@@ -1,6 +1,7 @@
 using System.ComponentModel.Composition;
 using Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 using Lkhsoft.Dring.Server.Utility;
+using Lkhsoft.Dring.Server.Utility.Authentication;
 
 namespace Lkhsoft.Dring.Server.Cli.Commands;
 

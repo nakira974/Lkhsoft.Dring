@@ -1,6 +1,8 @@
 using System.ComponentModel.Composition;
 using Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 using Lkhsoft.Dring.Server.Utility;
+using Lkhsoft.Dring.Server.Utility.Authentication;
+using Lkhsoft.Dring.Server.Utility.Core;
 
 namespace Lkhsoft.Dring.Server.Cli;
 
@@ -20,11 +22,29 @@ public class CommandParser
     [ImportMany] private IEnumerable<Lazy<ICommand, ICommandMetadata>> _commandImports;
 
     /// <summary>
+    ///     Logger
+    /// </summary>
+    [Import]
+    private IAppLogger _logger { get; set; }
+
+    /// <summary>
+    ///     Session service
+    /// </summary>
+    [Import]
+    private ISessionService _sessionService { get; set; }
+
+    /// <summary>
+    ///     Session container
+    /// </summary>
+    private readonly SessionContainer _sessionContainer;
+
+    /// <summary>
     ///     Default constructor, initializes the container and commands
     /// </summary>
     public CommandParser()
     {
-        DefaultContainer.ComposeParts(this);
+        _sessionContainer = new SessionContainer();
+        _sessionContainer.ComposeParts(this);
 
         _commands = (_commandImports ?? throw new InvalidOperationException("CLI commands import failed"))
             .SelectMany(import =>
@@ -44,18 +64,6 @@ public class CommandParser
             })
             .ToDictionary(command => command.Key, command => command.Value);
     }
-
-    /// <summary>
-    ///     Logger
-    /// </summary>
-    [Import]
-    private IAppLogger _logger { get; set; }
-
-    /// <summary>
-    ///     Session service
-    /// </summary>
-    [Import]
-    private ISessionService _sessionService { get; set; }
 
     /// <summary>
     ///     Parse and execute commands

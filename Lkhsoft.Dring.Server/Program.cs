@@ -10,6 +10,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using Lkhsoft.Dring.Server.Cli;
 using Lkhsoft.Dring.Server.Utility;
+using Lkhsoft.Dring.Server.Utility.Authentication;
+using Lkhsoft.Dring.Server.Utility.Core;
 
 namespace Lkhsoft.Dring.Server;
 
@@ -104,7 +106,6 @@ internal class Program
         var commandParser = new CommandParser();
         SetupSignalHandlers();
         CurrentSession = new Session("guest");
-
         while (true)
         {
             Console.Write("dring/guest > ");

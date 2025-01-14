@@ -1,6 +1,7 @@
 using System.ComponentModel.Composition;
 using System.Data.SQLite;
 using Lkhsoft.Dring.Server.Utility;
+using Lkhsoft.Dring.Server.Utility.Authentication;
 
 namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 
@@ -18,7 +19,7 @@ public class LogonCommand : AuthenticationCommandBase
     /// Session service
     /// </summary>
     [Import]
-    private ISessionService _sessionService { get; set; }
+    private IContextAccessor _contextAccessor { get; set; }
 
     /// <summary>
     ///     Default constructor
@@ -53,14 +54,7 @@ public class LogonCommand : AuthenticationCommandBase
             Console.WriteLine("LOGON command executed. You are now logged on.");
             var session = new Session(username);
             session.Start();
-            _sessionService.AddSession(session);
-
-            // Register the session callback
-            _sessionService.RegisterSessionCallback(x =>
-            {
-                Console.WriteLine($"Session callback triggered for user {x.Username}");
-                _sessionService.RemoveSession(x);
-            });
+            _contextAccessor.Register(session);
 
             _logger.LogInfo($"User {username} logged on at {DateTime.Now}");
 
