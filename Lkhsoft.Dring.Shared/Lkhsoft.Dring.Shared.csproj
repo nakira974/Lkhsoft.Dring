@@ -29,8 +29,8 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Remove="logo.jpg" />
-        <Content Include="logo.jpg">
+        <None Remove="logo.png" />
+        <Content Include="logo.png">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
             <Pack>True</Pack>
         </Content>
