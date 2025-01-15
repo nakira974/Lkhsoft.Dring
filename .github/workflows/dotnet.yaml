@@ -25,10 +25,7 @@ jobs:
 
       - name: Package NuGet
         run: |
-          dotnet pack Lkhsoft.Dring.Shared\Lkhsoft.Dring.Shared.csproj \
-            --configuration ${{ github.ref == 'refs/heads/dev' && 'Debug' || 'Release' }} \
-            -o:package \
-            ${{ github.ref == 'refs/heads/dev' && '-p:VersionSuffix=prerelease' || '' }}
+          dotnet pack Lkhsoft.Dring.Shared\Lkhsoft.Dring.Shared.csproj --configuration ${{ github.ref == 'refs/heads/dev' && 'Debug' || 'Release' }} -o:package ${{ github.ref == 'refs/heads/dev' && '-p:VersionSuffix=prerelease' || '' }}
 
       - name: Push generated package to GitHub registry
         run: |
