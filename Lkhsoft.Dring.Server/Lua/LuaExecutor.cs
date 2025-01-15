@@ -1,5 +1,10 @@
+#region
+
 using System.Composition;
-using Lkhsoft.Dring.Server.Utility.Authentication;
+using Lkhsoft.Dring.Shared.Core.Authentication;
+using Lkhsoft.Dring.Shared.Lua;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Lua;
 
@@ -18,7 +23,7 @@ public class LuaExecutor
     ///     Lua delegates
     /// </summary>
     private readonly IEnumerable<ILuaDelegate> _luaDelegates;
-    
+
     /// <summary>
     ///     Current context accessor
     /// </summary>
@@ -30,7 +35,7 @@ public class LuaExecutor
     [ImportingConstructor]
     public LuaExecutor([Import] IContextAccessor contextAccessor,
         [ImportMany] IEnumerable<ILuaDelegate> luaDelegates
-        )
+    )
     {
         _contextAccessor = contextAccessor;
         _luaDelegates = luaDelegates;

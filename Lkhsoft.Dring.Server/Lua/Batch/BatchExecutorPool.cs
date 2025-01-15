@@ -1,6 +1,9 @@
-using System.Collections.Concurrent;
+#region
+
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Lua.Batch;
 
@@ -17,12 +20,12 @@ public class BatchExecutorPool
     /// <summary>
     /// Running tasks that contain batch scripts
     /// </summary>
-    private List<Task> _tasks = new List<Task>();
+    private List<Task> _tasks = new();
 
     /// <summary>
     /// Completion subject
     /// </summary>
-    private readonly Subject<string> _completionSubject = new Subject<string>();
+    private readonly Subject<string> _completionSubject = new();
 
     /// <summary>
     /// Completion observable to be notified when all batch scripts are executed

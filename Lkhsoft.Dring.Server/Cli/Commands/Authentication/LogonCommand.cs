@@ -1,7 +1,12 @@
+#region
+
 using System.ComponentModel.Composition;
 using System.Data.SQLite;
-using Lkhsoft.Dring.Server.Utility;
-using Lkhsoft.Dring.Server.Utility.Authentication;
+using Lkhsoft.Dring.Shared.Cli;
+using Lkhsoft.Dring.Shared.Core.Authentication;
+using Lkhsoft.Dring.Shared.Core.Logger;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 
@@ -15,11 +20,22 @@ namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 [PartCreationPolicy(CreationPolicy.NonShared)]
 public class LogonCommand : AuthenticationCommandBase
 {
+    /// <summary>
+    /// Base constructor
+    /// </summary>
+    /// <param name="contextAccessor">Session context</param>
+    /// <param name="logger">Session logger</param>
+    [ImportingConstructor]
+    public LogonCommand([Import] IContextAccessor contextAccessor, [Import] IAppLogger logger) : base(contextAccessor,
+        logger)
+    {
+    }
+
     /// <inheritdoc />
     public override async void Execute(params string[] args)
     {
         base.Execute();
-        if (args.Length < 1 || args.Length > 1 || String.IsNullOrWhiteSpace(args[0]))
+        if (args.Length < 1 || args.Length > 1 || string.IsNullOrWhiteSpace(args[0]))
         {
             Console.WriteLine("Usage: LOGON <username>");
             return;
@@ -94,12 +110,8 @@ public class LogonCommand : AuthenticationCommandBase
 
         await using var reader = await command.ExecuteReaderAsync();
         if (await reader.ReadAsync())
-        {
             return reader["IV"].ToString() ?? throw new InvalidOperationException($"User's {username} IV not found.");
-        }
         else
-        {
             throw new Exception("User not found.");
-        }
     }
 }

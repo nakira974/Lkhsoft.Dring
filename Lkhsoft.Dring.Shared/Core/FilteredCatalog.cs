@@ -1,4 +1,8 @@
+#region
+
 using System.ComponentModel.Composition.Primitives;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Utility.Core;
 

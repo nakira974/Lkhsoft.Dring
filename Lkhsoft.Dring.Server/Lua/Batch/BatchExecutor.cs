@@ -1,9 +1,11 @@
-using System.ComponentModel.Composition;
+#region
+
 using System.Configuration;
 using System.Globalization;
 using System.Reactive.Subjects;
-using Lkhsoft.Dring.Server.Utility;
-using Lkhsoft.Dring.Server.Utility.Core;
+using Lkhsoft.Dring.Shared.Core;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Lua.Batch;
 
@@ -42,10 +44,7 @@ public class BatchExecutor
         foreach (var batch in _batchSchedule)
         {
             var batchScript = _batchScripts.FirstOrDefault(b => b.Name == batch.Key);
-            if (batchScript != null)
-            {
-                ScheduleBatchExecution(batchScript, batch.Value, completionSubject);
-            }
+            if (batchScript != null) ScheduleBatchExecution(batchScript, batch.Value, completionSubject);
         }
     }
 
@@ -59,15 +58,11 @@ public class BatchExecutor
     {
         var delay = scheduledTime - DateTime.Now;
         if (delay > TimeSpan.Zero)
-        {
             // Si l'exécution doit être différée, planifier une tâche après le délai
             Task.Delay(delay).ContinueWith(_ => { ExecuteLuaScript(batchScript, completionSubject); });
-        }
         else
-        {
             // Si l'heure de lancement est déjà passée, exécuter immédiatement
             ExecuteLuaScript(batchScript, completionSubject);
-        }
     }
 
     /// <summary>
@@ -77,16 +72,16 @@ public class BatchExecutor
     private void ExecuteLuaScript(BatchScript script, Subject<string> completionSubject)
     {
         var configLoader = DefaultContainer.Get<BatchConfigLoader>();
-        var luaScriptPath = String.Empty;
+        var luaScriptPath = string.Empty;
 
         if (OperatingSystem.IsWindows())
         {
-            luaScriptPath = String.Format(CultureInfo.CurrentCulture, "{0}\\{1}", configLoader?.BatchConfig.Path,
+            luaScriptPath = string.Format(CultureInfo.CurrentCulture, "{0}\\{1}", configLoader?.BatchConfig.Path,
                 script.Script);
         }
         else if (OperatingSystem.IsLinux())
         {
-            luaScriptPath = String.Format(CultureInfo.CurrentCulture, "{0}/{1}", configLoader?.BatchConfig.Path,
+            luaScriptPath = string.Format(CultureInfo.CurrentCulture, "{0}/{1}", configLoader?.BatchConfig.Path,
                 script.Script);
         }
         else
@@ -95,7 +90,7 @@ public class BatchExecutor
             return;
         }
 
-        if (String.IsNullOrWhiteSpace(luaScriptPath) || !File.Exists(luaScriptPath))
+        if (string.IsNullOrWhiteSpace(luaScriptPath) || !File.Exists(luaScriptPath))
         {
             Console.WriteLine($"Lua script {script} not found");
             return;
@@ -111,18 +106,14 @@ public class BatchExecutor
 
             var outputAllowedConfig = ConfigurationManager.AppSettings["BatchOutputAllowed"] ?? "False";
 
-            _ = Boolean.TryParse(outputAllowedConfig, out var outputAllowed);
+            _ = bool.TryParse(outputAllowedConfig, out var outputAllowed);
 
             if (!outputAllowed)
-            {
                 // Ne pas afficher la sortie standard de lua pour les batches
                 lua.DoString("print = function() end");
-            }
 
             for (byte i = 0; i < script.Parameters.Count(); i++)
-            {
                 lua[$"arg[{i}]"] = script.Parameters.ElementAt(i).DefaultValue;
-            }
 
             lua.DoString(luaScript);
             completionSubject.OnNext($"Lua script {script} executed successfully.");

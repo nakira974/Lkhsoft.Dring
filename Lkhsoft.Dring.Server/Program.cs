@@ -1,4 +1,6 @@
-﻿using System.Collections.Concurrent;
+﻿#region
+
+using System.Collections.Concurrent;
 using System.Configuration;
 using System.Data.SQLite;
 using System.Globalization;
@@ -8,11 +10,14 @@ using System.Security;
 using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
-using Lkhsoft.Dring.Server.Cli;
 using Lkhsoft.Dring.Server.Utility;
-using Lkhsoft.Dring.Server.Utility.Authentication;
 using Lkhsoft.Dring.Server.Utility.Core;
-using Lkhsoft.Dring.Server.Utility.Logger;
+using Lkhsoft.Dring.Shared.Cli;
+using Lkhsoft.Dring.Shared.Core;
+using Lkhsoft.Dring.Shared.Core.Authentication;
+using Lkhsoft.Dring.Shared.Core.Logger;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server;
 
@@ -80,7 +85,7 @@ internal class Program
     ///     Server text writer
     /// </summary>
     private static ServerTextWriter _serverTextWriter;
-    
+
     /// <summary>
     ///     Main server task executing CLI and network tasks
     /// </summary>
@@ -89,7 +94,7 @@ internal class Program
         var originalConsoleOut = Console.Out;
         _serverTextWriter = new ServerTextWriter(originalConsoleOut, Encoding.UTF8);
         Console.SetOut(originalConsoleOut);
-        
+
         Console.WriteLine("Server is starting...");
         _logger = DefaultContainer.Get<IAppLogger>() ??
                   throw new InvalidOperationException("Could not load app logger");
@@ -323,7 +328,7 @@ internal class Program
     /// </summary>
     private static void SetupSignalHandlers()
     {
-        bool isExiting = false;
+        var isExiting = false;
 
         void HandleShutdown()
         {

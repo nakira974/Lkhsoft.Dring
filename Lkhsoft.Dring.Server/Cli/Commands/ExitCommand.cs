@@ -1,9 +1,13 @@
+#region
+
 using System.ComponentModel.Composition;
 using System.Security;
-using Lkhsoft.Dring.Server.Cli.Commands.Authentication;
-using Lkhsoft.Dring.Server.Utility;
-using Lkhsoft.Dring.Server.Utility.Authentication;
-using Lkhsoft.Dring.Server.Utility.Core;
+using Lkhsoft.Dring.Shared.Cli;
+using Lkhsoft.Dring.Shared.Core;
+using Lkhsoft.Dring.Shared.Core.Authentication;
+using Lkhsoft.Dring.Shared.Core.Logger;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Cli.Commands;
 
@@ -24,7 +28,9 @@ public class ExitCommand : CommandBase
     /// <summary>
     ///     Default constructor
     /// </summary>
-    public ExitCommand()
+    [ImportingConstructor]
+    public ExitCommand([Import] IContextAccessor contextAccessor, [Import] IAppLogger logger) : base(contextAccessor,
+        logger)
     {
         _sessionService = DefaultContainer.Get<ISessionService>() ??
                           throw new SecurityException("Global session service not found");

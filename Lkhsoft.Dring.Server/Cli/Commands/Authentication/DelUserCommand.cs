@@ -1,5 +1,12 @@
+#region
+
 using System.ComponentModel.Composition;
 using System.Data.SQLite;
+using Lkhsoft.Dring.Shared.Cli;
+using Lkhsoft.Dring.Shared.Core.Authentication;
+using Lkhsoft.Dring.Shared.Core.Logger;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 
@@ -12,11 +19,18 @@ namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 [ExportMetadata("CommandAlias", "")]
 public class DelUserCommand : AuthenticationCommandBase
 {
+    /// <inheritdoc/>
+    [ImportingConstructor]
+    public DelUserCommand([Import] IContextAccessor contextAccessor, [Import] IAppLogger logger) : base(contextAccessor,
+        logger)
+    {
+    }
+
     /// <inheritdoc />
     public override async void Execute(params string[] args)
     {
         base.Execute();
-        if (args.Length < 1 || args.Length > 1 || String.IsNullOrWhiteSpace(args[0]))
+        if (args.Length < 1 || args.Length > 1 || string.IsNullOrWhiteSpace(args[0]))
         {
             Console.WriteLine("Usage: DELUSER <username>");
             return;

@@ -1,6 +1,10 @@
-using Lkhsoft.Dring.Server.Cli;
+#region
 
-namespace Lkhsoft.Dring.Server.Utility.Authentication;
+using Lkhsoft.Dring.Shared.Cli;
+
+#endregion
+
+namespace Lkhsoft.Dring.Shared.Core.Authentication;
 
 /// <summary>
 ///     Session context accessor
@@ -39,13 +43,13 @@ public interface IContextAccessor
     /// </summary>
     /// <returns>The current CLI session</returns>
     public CommandParser GetCliSession();
-    
+
     /// <summary>
     ///     Current text writer
     /// </summary>
     /// <param name="textWriter">Text writer to be registered</param>
     public void RegisterTextWriter(TextWriter textWriter);
-    
+
     /// <summary>
     ///     Returns the current text writer
     /// </summary>

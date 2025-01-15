@@ -1,7 +1,11 @@
+#region
+
 using System.ComponentModel.Composition;
-using System.Data.SQLite;
-using Lkhsoft.Dring.Server.Utility;
-using Lkhsoft.Dring.Server.Utility.Authentication;
+using Lkhsoft.Dring.Shared.Cli;
+using Lkhsoft.Dring.Shared.Core.Authentication;
+using Lkhsoft.Dring.Shared.Core.Logger;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 
@@ -15,6 +19,12 @@ namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 [PartCreationPolicy(CreationPolicy.NonShared)]
 public class LogoffCommand : AuthenticationCommandBase
 {
+    /// <inheritdoc/>
+    [ImportingConstructor]
+    public LogoffCommand([Import] IContextAccessor contextAccessor, IAppLogger logger) : base(contextAccessor, logger)
+    {
+    }
+
     /// <inheritdoc />
     public override async void Execute(params string[] args)
     {
