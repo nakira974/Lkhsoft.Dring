@@ -42,11 +42,13 @@ public class CommandParser
     /// <summary>
     ///     Default constructor, initializes the container and commands
     /// </summary>
-    public CommandParser()
+    public CommandParser(TextWriter textWriter)
     {
         _sessionContainer = new SessionContainer();
         _sessionContainer.ComposeParts(this);
+        _sessionContainer.ComposeParts(textWriter);
         _contextAccessor.RegisterCliSession(this);
+        _contextAccessor.RegisterTextWriter(textWriter);
 
         _commands = (_commandImports ?? throw new InvalidOperationException("CLI commands import failed"))
             .SelectMany(import =>

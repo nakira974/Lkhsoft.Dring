@@ -33,6 +33,7 @@ public class ExitCommand : CommandBase
     /// <inheritdoc />
     public override void Execute(params string[] args)
     {
+        base.Execute();
         Console.WriteLine("Exiting...");
         _sessionService.ClearAllSessions();
         Environment.Exit(0);

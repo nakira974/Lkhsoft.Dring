@@ -76,12 +76,20 @@ internal class Program
     /// </summary>
     private static readonly X509Certificate2? ServerCertificate = LoadCertificate();
 
-
+    /// <summary>
+    ///     Server text writer
+    /// </summary>
+    private static ServerTextWriter _serverTextWriter;
+    
     /// <summary>
     ///     Main server task executing CLI and network tasks
     /// </summary>
     private static async Task Main(string[] args)
     {
+        var originalConsoleOut = Console.Out;
+        _serverTextWriter = new ServerTextWriter(originalConsoleOut, Encoding.UTF8);
+        Console.SetOut(originalConsoleOut);
+        
         Console.WriteLine("Server is starting...");
         _logger = DefaultContainer.Get<IAppLogger>() ??
                   throw new InvalidOperationException("Could not load app logger");
@@ -100,7 +108,7 @@ internal class Program
         Console.WriteLine("CLI Ready. Type 'exit' to quit.");
         _logger.LogInfo($"Server started on ports TCP:{TcpPort} and UDP:{UdpPort}");
 
-        var commandParser = new CommandParser();
+        var commandParser = new CommandParser(originalConsoleOut);
         SetupSignalHandlers();
 
         while (true)

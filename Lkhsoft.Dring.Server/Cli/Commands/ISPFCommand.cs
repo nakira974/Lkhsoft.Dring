@@ -32,6 +32,7 @@ public class ISPFCommand : CommandBase
     /// <inheritdoc />
     public override void Execute(params string[] args)
     {
+        base.Execute();
         Console.WriteLine("ISPF command executed. Entering ISPF environment.");
         ShowISPFMenu();
     }

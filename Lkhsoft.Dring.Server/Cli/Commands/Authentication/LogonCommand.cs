@@ -15,23 +15,10 @@ namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 [PartCreationPolicy(CreationPolicy.NonShared)]
 public class LogonCommand : AuthenticationCommandBase
 {
-    /// <summary>
-    /// Session service
-    /// </summary>
-    private readonly IContextAccessor _contextAccessor;
-
-    /// <summary>
-    ///     Default constructor
-    /// </summary>
-    [ImportingConstructor]
-    public LogonCommand([Import] IContextAccessor contextAccessor)
-    {
-        _contextAccessor = contextAccessor;
-    }
-
     /// <inheritdoc />
     public override async void Execute(params string[] args)
     {
+        base.Execute();
         if (args.Length < 1 || args.Length > 1 || String.IsNullOrWhiteSpace(args[0]))
         {
             Console.WriteLine("Usage: LOGON <username>");

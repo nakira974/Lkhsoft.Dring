@@ -1,4 +1,5 @@
 using System.Composition;
+using Lkhsoft.Dring.Server.Utility.Authentication;
 
 namespace Lkhsoft.Dring.Server.Lua;
 
@@ -17,13 +18,21 @@ public class LuaExecutor
     ///     Lua delegates
     /// </summary>
     private readonly IEnumerable<ILuaDelegate> _luaDelegates;
+    
+    /// <summary>
+    ///     Current context accessor
+    /// </summary>
+    private readonly IContextAccessor _contextAccessor;
 
     /// <summary>
     ///     Default constructor
     /// </summary>
     [ImportingConstructor]
-    public LuaExecutor([ImportMany] IEnumerable<ILuaDelegate> luaDelegates)
+    public LuaExecutor([Import] IContextAccessor contextAccessor,
+        [ImportMany] IEnumerable<ILuaDelegate> luaDelegates
+        )
     {
+        _contextAccessor = contextAccessor;
         _luaDelegates = luaDelegates;
         _luaState = new NLua.Lua();
         RegisterFunctions();
@@ -45,6 +54,7 @@ public class LuaExecutor
     /// <param name="script">Script to execute</param>
     public void ExecuteScript(string script)
     {
+        Console.SetOut(_contextAccessor.GetTextWriter());
         try
         {
             Console.WriteLine("Exécution du script Lua...");

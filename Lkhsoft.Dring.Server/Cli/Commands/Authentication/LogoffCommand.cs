@@ -15,24 +15,10 @@ namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 [PartCreationPolicy(CreationPolicy.NonShared)]
 public class LogoffCommand : AuthenticationCommandBase
 {
-    /// <summary>
-    ///     Session service
-    /// </summary>
-    private readonly IContextAccessor _contextAccessor;
-
-    /// <summary>
-    ///     Default constructor
-    /// </summary>
-    /// <param name="contextAccessor">IContextAccessor part</param>
-    [ImportingConstructor]
-    public LogoffCommand([Import] IContextAccessor contextAccessor)
-    {
-        _contextAccessor = contextAccessor;
-    }
-
     /// <inheritdoc />
     public override async void Execute(params string[] args)
     {
+        base.Execute();
         if (args.Length > 0)
         {
             Console.WriteLine("Usage: LOGOFF");

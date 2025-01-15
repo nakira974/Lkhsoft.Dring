@@ -15,6 +15,7 @@ public class ClearCommand : CommandBase
     /// <inheritdoc />
     public override void Execute(params string[] args)
     {
+        base.Execute();
         Console.Clear();
     }
 }
