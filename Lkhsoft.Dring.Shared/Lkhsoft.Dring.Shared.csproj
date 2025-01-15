@@ -29,11 +29,11 @@
     </ItemGroup>
 
     <ItemGroup>
-        <None Remove="logo.png" />
-        <Content Include="logo.png">
-            <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-            <Pack>True</Pack>
-        </Content>
+      <None Remove="logo.png" />
     </ItemGroup>
 
+    <ItemGroup>
+        <None Include="logo.png" Pack="true" PackagePath="/" />
+    </ItemGroup>
+    
 </Project>
