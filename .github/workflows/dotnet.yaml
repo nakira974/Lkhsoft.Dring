@@ -23,7 +23,7 @@ jobs:
         run: dotnet build --no-restore
 
       - name: Package nuget
-        run: dotnet pack Lkhsoft.Dring.Shared\Lkhsoft.Dring.Shared.csproj --configuration debug -o:package
+        run: dotnet pack Lkhsoft.Dring.Shared\Lkhsoft.Dring.Shared.csproj --configuration release -o:package
 
       - name: Push generated package to GitHub registry
         run: |

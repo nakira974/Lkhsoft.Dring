@@ -5,6 +5,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{7E4BC3F3-D89B-4576-9112-91BC35375E54}"
 	ProjectSection(SolutionItems) = preProject
 		compose.yaml = compose.yaml
+		.github\workflows\dotnet.yaml = .github\workflows\dotnet.yaml
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lkhsoft.Dring.Shared", "Lkhsoft.Dring.Shared\Lkhsoft.Dring.Shared.csproj", "{6A0954F9-ADCA-44BA-B44B-47C6E0A9456B}"
