@@ -28,7 +28,7 @@ jobs:
       - name: Push generated package to GitHub registry
         run: |
           dotnet nuget update source nakira974.github --configfile ./NuGet.Config --username nakira974 --password ${{ secrets.GITHUB_TOKEN }}  --store-password-in-clear-text
-          dotnet nuget push D:\a\Lkhsoft.Dring.Shared\Lkhsoft.Dring.Shared\package\*.nupkg --source nakira974.github --skip-duplicate
+          dotnet nuget push D:\a\Lkhsoft.Dring.Shared\Lkhsoft.Dring.Shared\bin\Release\*.nupkg --source nakira974.github --skip-duplicate
 
       - name: Test
         run: dotnet test --no-build --verbosity normal
