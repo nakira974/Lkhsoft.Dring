@@ -2,7 +2,7 @@ name: Server's plugins NuGet package publish
 
 on:
   push:
-    branches: ["dev"]
+    branches: [ "dev" ]
   pull_request:
     branches: [ "trunk", "dev" ]
 
@@ -21,25 +21,14 @@ jobs:
         run: dotnet restore --configfile ./NuGet.Config
 
       - name: Build
-        run: |
-          if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
-            dotnet build --configuration Debug --no-restore
-          else
-            dotnet build --configuration Release --no-restore
-          fi
+        run: dotnet build --configuration ${{ github.ref == 'refs/heads/dev' && 'Debug' || 'Release' }} --no-restore
 
       - name: Package NuGet
         run: |
-          if [ "${{ github.ref }}" == "refs/heads/dev" ]; then
-            dotnet pack Lkhsoft.Dring.Shared\Lkhsoft.Dring.Shared.csproj \
-              --configuration Debug \
-              -o:package \
-              -p:VersionSuffix=prerelease
-          else
-            dotnet pack Lkhsoft.Dring.Shared\Lkhsoft.Dring.Shared.csproj \
-              --configuration Release \
-              -o:package
-          fi
+          dotnet pack Lkhsoft.Dring.Shared\Lkhsoft.Dring.Shared.csproj \
+            --configuration ${{ github.ref == 'refs/heads/dev' && 'Debug' || 'Release' }} \
+            -o:package \
+            ${{ github.ref == 'refs/heads/dev' && '-p:VersionSuffix=prerelease' || '' }}
 
       - name: Push generated package to GitHub registry
         run: |
