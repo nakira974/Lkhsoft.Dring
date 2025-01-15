@@ -4,6 +4,18 @@
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
+        <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+        <Title>Lkhsoft.Dring.Shared</Title>
+        <Authors>nakira974</Authors>
+        <Description>Dring server plugin library</Description>
+        <PackageIcon>logo.png</PackageIcon>
+        <RepositoryType>git</RepositoryType>
+        <RepositoryUrl>https://github.com/nakira974/Lkhsoft.Dring</RepositoryUrl>
+        <PackageProjectUrl>https://github.com/nakira974/Lkhsoft.Dring</PackageProjectUrl>
+        <PackageLicenseUrl>https://github.com/nakira974/Lkhsoft.Dring/blob/master/Licence</PackageLicenseUrl>
+        <PackageTags>dotnet utilities web</PackageTags>
+        <PackageReleaseNotes>Created a server plugin library</PackageReleaseNotes>
+        <LangVersion>default</LangVersion>
     </PropertyGroup>
 
     <ItemGroup>
