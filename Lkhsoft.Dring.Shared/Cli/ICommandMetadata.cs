@@ -1,4 +1,4 @@
-namespace Lkhsoft.Dring.Server.Cli;
+namespace Lkhsoft.Dring.Shared.Cli;
 
 /// <summary>
 ///     CLI commands metadata

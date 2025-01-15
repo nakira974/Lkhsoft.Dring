@@ -1,10 +1,16 @@
+#region
+
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.ComponentModel.Composition.Primitives;
-using Lkhsoft.Dring.Server.Cli;
-using Lkhsoft.Dring.Server.Utility.Authentication;
+using System.Reflection;
+using Lkhsoft.Dring.Shared.Cli;
+using Lkhsoft.Dring.Shared.Core.Authentication;
+using FilteredCatalog = Lkhsoft.Dring.Server.Utility.Core.FilteredCatalog;
 
-namespace Lkhsoft.Dring.Server.Utility.Core;
+#endregion
+
+namespace Lkhsoft.Dring.Shared.Core;
 
 /// <summary>
 ///     Session container isolating the commands and services
@@ -36,9 +42,11 @@ public class SessionContainer
     {
         var catalogs = DefaultContainer.ConfigurePlugins("PluginsPath", "CommandsPath");
 
+        var serverAssembly = Assembly.Load("Lkhsoft.Dring.Server");
         var catalog = new AggregateCatalog(catalogs);
 
-        catalog.Catalogs.Add(new AssemblyCatalog(typeof(SessionContainer).Assembly));
+        catalog.Catalogs.Add(new AssemblyCatalog(Assembly.GetExecutingAssembly()));
+        catalog.Catalogs.Add(new AssemblyCatalog(serverAssembly));
 
         _container = new CompositionContainer(catalog);
     }

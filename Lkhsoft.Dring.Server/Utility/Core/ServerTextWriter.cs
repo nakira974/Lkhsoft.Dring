@@ -1,7 +1,11 @@
+#region
+
 using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Utility.Core;
 
@@ -14,17 +18,17 @@ public class ServerTextWriter : TextWriter
     ///     Original console output
     /// </summary>
     private readonly TextWriter _originalConsoleOut;
-    
+
     /// <summary>
     ///     Sockets to write to
     /// </summary>
     private readonly ConcurrentDictionary<int, (UdpClient socket, IPEndPoint endPoint)> _sockets;
-    
+
     /// <summary>
     ///   Encoding to use
     /// </summary>
     private readonly Encoding _encoding;
-    
+
     /// <inheritdoc />
     public override Encoding Encoding => _encoding;
 
@@ -37,7 +41,7 @@ public class ServerTextWriter : TextWriter
     {
         _originalConsoleOut = originalConsoleOut;
         _sockets = new ConcurrentDictionary<int, (UdpClient, IPEndPoint)>();
-        _encoding = encoding ?? Encoding.UTF8;
+        _encoding = encoding ?? Encoding.Latin1;
     }
 
     /// <summary>
@@ -92,7 +96,7 @@ public class ServerTextWriter : TextWriter
             _originalConsoleOut.Write(Encoding.GetString(data.ToArray()));
         }
     }
-    
+
     /// <summary>
     ///   Convert a char buffer to a byte buffer
     /// </summary>
@@ -100,7 +104,7 @@ public class ServerTextWriter : TextWriter
     /// <returns></returns>
     private ReadOnlySpan<byte> ConvertToBytes(ReadOnlySpan<char> buffer)
     {
-        int byteCount = _encoding.GetByteCount(buffer);
+        var byteCount = _encoding.GetByteCount(buffer);
         var byteArray = new byte[byteCount];
         _encoding.GetBytes(buffer, byteArray);
         return byteArray;

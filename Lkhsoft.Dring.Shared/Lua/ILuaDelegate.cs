@@ -1,4 +1,4 @@
-namespace Lkhsoft.Dring.Server.Lua;
+namespace Lkhsoft.Dring.Shared.Lua;
 
 /// <summary>
 ///     Definition of a delegate that can be executed in Lua

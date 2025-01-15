@@ -1,7 +1,13 @@
+#region
+
 using System.ComponentModel.Composition;
 using System.Configuration;
-using Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 using Lkhsoft.Dring.Server.Lua.Batch;
+using Lkhsoft.Dring.Shared.Cli;
+using Lkhsoft.Dring.Shared.Core.Authentication;
+using Lkhsoft.Dring.Shared.Core.Logger;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Cli.Commands;
 
@@ -19,12 +25,11 @@ public class ISPFCommand : CommandBase
     /// </summary>
     private readonly BatchConfigLoader _batchConfigLoader;
 
-    /// <summary>
-    ///     Default constructor
-    /// </summary>
-    /// <param name="batchConfigLoader">BatchConfigLoader part</param>
+    /// <inheritdoc/>
     [ImportingConstructor]
-    public ISPFCommand([Import] BatchConfigLoader batchConfigLoader)
+    public ISPFCommand([Import] IContextAccessor contextAccessor, [Import] IAppLogger logger,
+        [Import] BatchConfigLoader batchConfigLoader)
+        : base(contextAccessor, logger)
     {
         _batchConfigLoader = batchConfigLoader;
     }
@@ -34,13 +39,13 @@ public class ISPFCommand : CommandBase
     {
         base.Execute();
         Console.WriteLine("ISPF command executed. Entering ISPF environment.");
-        ShowISPFMenu();
+        ShowMainMenu();
     }
 
     /// <summary>
     ///     Display the ISPF menu
     /// </summary>
-    private void ShowISPFMenu()
+    private void ShowMainMenu()
     {
         var exitMenu = false;
 
@@ -130,9 +135,7 @@ public class ISPFCommand : CommandBase
         // Liste des batchs disponibles
         var batchList = _batchConfigLoader.BatchConfig.Batches.ToList();
         for (ushort i = 0; i < batchList.Count; i++)
-        {
             Console.WriteLine($"{i + 1}. {batchList[i].Name} - {batchList[i].Description}");
-        }
 
         while (!exitBatchMenu)
         {
@@ -146,7 +149,7 @@ public class ISPFCommand : CommandBase
                 break;
             }
 
-            if (UInt16.TryParse(input, out var batchIndex) && batchIndex > 0 && batchIndex <= batchList.Count)
+            if (ushort.TryParse(input, out var batchIndex) && batchIndex > 0 && batchIndex <= batchList.Count)
             {
                 var selectedBatch = batchList[batchIndex - 1];
                 Console.WriteLine($"Selected Batch: {selectedBatch.Name}");
@@ -181,7 +184,7 @@ public class ISPFCommand : CommandBase
             }
 
             // Si l'utilisateur entre une valeur, l'utiliser, sinon garder la valeur par défaut
-            var finalValue = String.IsNullOrWhiteSpace(userInput) ? param.DefaultValue : userInput;
+            var finalValue = string.IsNullOrWhiteSpace(userInput) ? param.DefaultValue : userInput;
             Console.WriteLine($"{param.Name} set to: {finalValue}");
 
             // Sauvegarde des paramètres si nécessaire, par exemple dans un dictionnaire ou autre structure
@@ -202,7 +205,7 @@ public class ISPFCommand : CommandBase
 
         // Créer un dictionnaire qui mappe le nom du batch à son horaire de lancement
         var defaultScheduledTime = ConfigurationManager.AppSettings["BatchDefaultLaunchTime"] ?? "1";
-        _ = UInt16.TryParse(defaultScheduledTime, out var defaultLaunchTime);
+        _ = ushort.TryParse(defaultScheduledTime, out var defaultLaunchTime);
         var batchSchedule = new Dictionary<string, DateTime>
         {
             {batch.Name, DateTime.Now.AddMinutes(defaultLaunchTime)}

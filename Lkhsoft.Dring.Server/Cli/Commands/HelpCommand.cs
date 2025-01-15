@@ -1,8 +1,14 @@
+#region
+
 using System.ComponentModel.Composition;
 using System.Globalization;
-using Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 using Lkhsoft.Dring.Server.Utility;
-using Lkhsoft.Dring.Server.Utility.Authentication;
+using Lkhsoft.Dring.Shared.Cli;
+using Lkhsoft.Dring.Shared.Core;
+using Lkhsoft.Dring.Shared.Core.Authentication;
+using Lkhsoft.Dring.Shared.Core.Logger;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Cli.Commands;
 
@@ -20,7 +26,7 @@ public class HelpCommand : CommandBase
     ///     Enumeration of all commands
     /// </summary>
     private readonly IEnumerable<Lazy<ICommand, ICommandMetadata>> _commandImports;
-    
+
 
     /// <summary>
     ///     Default constructor
@@ -28,7 +34,9 @@ public class HelpCommand : CommandBase
     /// <param name="contextAccessor">IContextAccessor part</param>
     /// <param name="commandImports"> ICommand parts</param>
     [ImportingConstructor]
-    public HelpCommand([ImportMany] IEnumerable<Lazy<ICommand, ICommandMetadata>> commandImports)
+    public HelpCommand([Import] IContextAccessor contextAccessor, [Import] IAppLogger logger,
+        [ImportMany] IEnumerable<Lazy<ICommand, ICommandMetadata>> commandImports
+    ) : base(contextAccessor, logger)
     {
         _commandImports = commandImports;
     }
@@ -56,9 +64,7 @@ public class HelpCommand : CommandBase
             var userRole = await _contextAccessor.GetRole();
             if (userRole is null || !Enum.TryParse(userRole, out AuthorizationType userAuthorizationType) ||
                 !authorizedCommandAttribute.Authorizations.Contains(userAuthorizationType))
-            {
                 continue;
-            }
 
             authorizedCommands.Add(currentCommand);
         }

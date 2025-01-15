@@ -1,4 +1,4 @@
-namespace Lkhsoft.Dring.Server.Utility.Authentication;
+namespace Lkhsoft.Dring.Shared.Core.Authentication;
 
 /// <summary>
 ///     Server session model
@@ -56,6 +56,6 @@ public class Session : IComparable<Session>
     ///<inheritdoc />
     public int CompareTo(Session? other)
     {
-        return String.CompareOrdinal(Id.ToString(), other?.ToString());
+        return string.CompareOrdinal(Id.ToString(), other?.ToString());
     }
 }

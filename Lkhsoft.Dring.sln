@@ -7,6 +7,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		compose.yaml = compose.yaml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Lkhsoft.Dring.Shared", "Lkhsoft.Dring.Shared\Lkhsoft.Dring.Shared.csproj", "{6A0954F9-ADCA-44BA-B44B-47C6E0A9456B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -17,5 +19,9 @@ Global
 		{C1AF3FA1-41BC-490C-A51E-26F7743B0FB8}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1AF3FA1-41BC-490C-A51E-26F7743B0FB8}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C1AF3FA1-41BC-490C-A51E-26F7743B0FB8}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6A0954F9-ADCA-44BA-B44B-47C6E0A9456B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6A0954F9-ADCA-44BA-B44B-47C6E0A9456B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6A0954F9-ADCA-44BA-B44B-47C6E0A9456B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6A0954F9-ADCA-44BA-B44B-47C6E0A9456B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

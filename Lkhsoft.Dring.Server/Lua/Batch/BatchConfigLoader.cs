@@ -1,7 +1,11 @@
+#region
+
 using System.ComponentModel.Composition;
 using System.Configuration;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Lua.Batch;
 
@@ -23,11 +27,9 @@ public class BatchConfigLoader
     public BatchConfigLoader()
     {
         BatchConfig = LoadBatchConfig().BatchConfig;
-        if (!String.IsNullOrEmpty(BatchConfig.Path) &&
+        if (!string.IsNullOrEmpty(BatchConfig.Path) &&
             (BatchConfig.Path.EndsWith('/') || BatchConfig.Path.EndsWith('\\')))
-        {
             BatchConfig.Path = BatchConfig.Path.Substring(0, BatchConfig.Path.Length - 1);
-        }
     }
 
     /// <summary>

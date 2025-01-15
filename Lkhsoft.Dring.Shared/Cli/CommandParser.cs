@@ -1,11 +1,13 @@
-using System.ComponentModel.Composition;
-using Lkhsoft.Dring.Server.Cli.Commands.Authentication;
-using Lkhsoft.Dring.Server.Utility;
-using Lkhsoft.Dring.Server.Utility.Authentication;
-using Lkhsoft.Dring.Server.Utility.Core;
-using Lkhsoft.Dring.Server.Utility.Logger;
+#region
 
-namespace Lkhsoft.Dring.Server.Cli;
+using System.ComponentModel.Composition;
+using Lkhsoft.Dring.Shared.Core;
+using Lkhsoft.Dring.Shared.Core.Authentication;
+using Lkhsoft.Dring.Shared.Core.Logger;
+
+#endregion
+
+namespace Lkhsoft.Dring.Shared.Cli;
 
 /// <summary>
 ///     Command parser used in the CLI
@@ -46,7 +48,6 @@ public class CommandParser
     {
         _sessionContainer = new SessionContainer();
         _sessionContainer.ComposeParts(this);
-        _sessionContainer.ComposeParts(textWriter);
         _contextAccessor.RegisterCliSession(this);
         _contextAccessor.RegisterTextWriter(textWriter);
 
@@ -55,14 +56,12 @@ public class CommandParser
             {
                 var commands = new List<KeyValuePair<string, ICommand>>
                 {
-                    new KeyValuePair<string, ICommand>(import.Metadata.CommandName, import.Value)
+                    new(import.Metadata.CommandName, import.Value)
                 };
 
                 // Si Alias n'est pas null ou vide, ajouter l'alias également
-                if (!String.IsNullOrEmpty(import.Metadata.CommandAlias))
-                {
+                if (!string.IsNullOrEmpty(import.Metadata.CommandAlias))
                     commands.Add(new KeyValuePair<string, ICommand>(import.Metadata.CommandAlias, import.Value));
-                }
 
                 return commands;
             })

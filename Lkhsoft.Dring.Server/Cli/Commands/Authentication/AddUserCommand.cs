@@ -1,7 +1,13 @@
+#region
+
 using System.ComponentModel.Composition;
 using System.Data.SQLite;
 using System.Security.Cryptography;
-using System.Text;
+using Lkhsoft.Dring.Shared.Cli;
+using Lkhsoft.Dring.Shared.Core.Authentication;
+using Lkhsoft.Dring.Shared.Core.Logger;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 
@@ -14,11 +20,17 @@ namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
 [ExportMetadata("CommandAlias", "")]
 public class AddUserCommand : AuthenticationCommandBase
 {
+    /// <inheritdoc/>
+    [ImportingConstructor]
+    public AddUserCommand(IContextAccessor contextAccessor, IAppLogger logger) : base(contextAccessor, logger)
+    {
+    }
+
     /// <inheritdoc />
     public override async void Execute(params string[] args)
     {
         base.Execute();
-        if (args.Length < 1 || args.Length > 1 || String.IsNullOrWhiteSpace(args[0]))
+        if (args.Length < 1 || args.Length > 1 || string.IsNullOrWhiteSpace(args[0]))
         {
             Console.WriteLine("Usage: ADDUSER <username>");
             return;
@@ -68,7 +80,7 @@ public class AddUserCommand : AuthenticationCommandBase
         var iv = new byte[8];
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(iv);
-        return BitConverter.ToString(iv).Replace("-", String.Empty);
+        return BitConverter.ToString(iv).Replace("-", string.Empty);
     }
 
     /// <summary>
@@ -78,7 +90,7 @@ public class AddUserCommand : AuthenticationCommandBase
     /// <param name="encryptedPassword">Encrypted password</param>
     /// <param name="iv">Initialization vector</param>
     /// <returns>Une tâche asynchrone.</returns>
-    public async Task InsertUserAsync(string username, string encryptedPassword, string iv)
+    private async Task InsertUserAsync(string username, string encryptedPassword, string iv)
     {
         const string query = @"
             INSERT INTO Users (Username, Password, IsConnected, IV)

@@ -1,7 +1,12 @@
+#region
+
 using System.ComponentModel.Composition;
 using System.Security;
-using Lkhsoft.Dring.Server.Cli;
-using Lkhsoft.Dring.Server.Utility.Core;
+using Lkhsoft.Dring.Shared.Cli;
+using Lkhsoft.Dring.Shared.Core;
+using Lkhsoft.Dring.Shared.Core.Authentication;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Utility.Authentication;
 
@@ -26,7 +31,7 @@ public class ContextAccessor : IContextAccessor
     ///     Current CLI session
     /// </summary>
     private CommandParser CliSession { get; set; }
-    
+
     /// <summary>
     ///     Current text writer
     /// </summary>
@@ -93,6 +98,8 @@ public class ContextAccessor : IContextAccessor
         _session.End();
         _sessionService.RemoveSession(_session);
         _session = new Session("guest");
+        _session.Start();
+        _sessionService.AddSession(_session);
     }
 
     ///<inheritdoc />

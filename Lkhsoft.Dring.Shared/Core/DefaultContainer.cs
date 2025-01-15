@@ -1,10 +1,15 @@
+#region
+
 using System.ComponentModel.Composition;
 using System.ComponentModel.Composition.Hosting;
 using System.Configuration;
-using Lkhsoft.Dring.Server.Utility.Logger;
+using System.Reflection;
+using Lkhsoft.Dring.Shared.Core.Logger;
 using NLog;
 
-namespace Lkhsoft.Dring.Server.Utility.Core;
+#endregion
+
+namespace Lkhsoft.Dring.Shared.Core;
 
 /// <summary>
 ///     Server container that uses MEF to load parts
@@ -30,9 +35,11 @@ public class DefaultContainer
                 var catalogs = ConfigurePlugins("PluginsPath", "CommandsPath");
 
                 var catalog = new AggregateCatalog(catalogs);
+                var serverAssembly = Assembly.Load("Lkhsoft.Dring.Server");
 
                 // Ajouter les assemblages nécessaires au container
-                catalog.Catalogs.Add(new AssemblyCatalog(typeof(DefaultContainer).Assembly));
+                catalog.Catalogs.Add(new AssemblyCatalog(Assembly.GetExecutingAssembly()));
+                catalog.Catalogs.Add(new AssemblyCatalog(serverAssembly));
 
                 _container = new CompositionContainer(catalog);
 

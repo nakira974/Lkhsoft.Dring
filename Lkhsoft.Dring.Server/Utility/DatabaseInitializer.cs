@@ -1,5 +1,9 @@
+#region
+
 using System.Configuration;
 using System.Data.SQLite;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Utility;
 

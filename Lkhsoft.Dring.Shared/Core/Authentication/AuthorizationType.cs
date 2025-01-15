@@ -1,4 +1,4 @@
-namespace Lkhsoft.Dring.Server.Cli.Commands.Authentication;
+namespace Lkhsoft.Dring.Shared.Core.Authentication;
 
 /// <summary>
 /// System authorization type

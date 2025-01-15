@@ -1,9 +1,13 @@
-using System.ComponentModel.Composition;
-using Lkhsoft.Dring.Server.Utility;
-using Lkhsoft.Dring.Server.Utility.Authentication;
-using Lkhsoft.Dring.Server.Utility.Logger;
+#region
 
-namespace Lkhsoft.Dring.Server.Cli.Commands;
+using Lkhsoft.Dring.Server.Utility;
+using Lkhsoft.Dring.Shared.Core;
+using Lkhsoft.Dring.Shared.Core.Authentication;
+using Lkhsoft.Dring.Shared.Core.Logger;
+
+#endregion
+
+namespace Lkhsoft.Dring.Shared.Cli;
 
 /// <summary>
 ///     Common base class for all commands
@@ -13,14 +17,23 @@ public abstract class CommandBase : ICommand
     /// <summary>
     ///     Logger
     /// </summary>
-    [Import]
-    private protected IAppLogger _logger { get; set; }
+    protected readonly IAppLogger _logger;
 
     /// <summary>
     ///     Current context accessor
     /// </summary>
-    [Import] 
-    private protected IContextAccessor _contextAccessor { get; set; }
+    protected readonly IContextAccessor _contextAccessor;
+
+    /// <summary>
+    ///     Base constructor
+    /// </summary>
+    /// <param name="contextAccessor">Context of the current session</param>
+    /// <param name="logger">Logger of the current context</param>
+    public CommandBase(IContextAccessor contextAccessor, IAppLogger logger)
+    {
+        _logger = logger;
+        _contextAccessor = contextAccessor;
+    }
 
     /// <inheritdoc />
     public virtual void Execute(params string[] args)

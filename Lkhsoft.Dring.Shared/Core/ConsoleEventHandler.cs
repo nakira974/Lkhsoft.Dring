@@ -1,10 +1,13 @@
-using System.Collections;
+#region
+
 using System.Runtime.InteropServices;
 using System.Security;
 using System.Security.Cryptography;
 using System.Text;
 
-namespace Lkhsoft.Dring.Server.Utility;
+#endregion
+
+namespace Lkhsoft.Dring.Shared.Core;
 
 /// <summary>
 ///     Console event handler
@@ -19,7 +22,7 @@ public class ConsoleEventHandler
     /// <summary>
     /// Commands history
     /// </summary>
-    private static LinkedList<string> _history = new LinkedList<string>();
+    private static LinkedList<string> _history = new();
 
     /// <summary>
     /// Current history index
@@ -29,7 +32,7 @@ public class ConsoleEventHandler
     /// <summary>
     /// Map of AES keys by version number
     /// </summary>
-    private static readonly Dictionary<int, byte[]> KeyVersions = new Dictionary<int, byte[]>
+    private static readonly Dictionary<int, byte[]> KeyVersions = new()
     {
         {1, Convert.FromBase64String("9WpFqL8J7g5dYq8B5jK9nl6jPjdMN1FobNfhz0axdkM=")},
         {2, Convert.FromBase64String("tDF3v6G3PqNbIh7D8HSTGpN9oYfrXfH76nboydHpCeY=")}
@@ -57,20 +60,14 @@ public class ConsoleEventHandler
                 var key = Console.ReadKey(true);
 
                 // Gestion de la sortie (Ctrl+X)
-                if (key.Modifiers == ConsoleModifiers.Control && key.Key == ConsoleKey.X)
-                {
-                    return null;
-                }
+                if (key.Modifiers == ConsoleModifiers.Control && key.Key == ConsoleKey.X) return null;
 
                 // Gestion de la validation (Entrée)
                 if (key.Key == ConsoleKey.Enter)
                 {
                     Console.WriteLine();
 
-                    if (!string.IsNullOrWhiteSpace(input))
-                    {
-                        _history.AddLast(input); // Ajouter la saisie à l'historique
-                    }
+                    if (!string.IsNullOrWhiteSpace(input)) _history.AddLast(input); // Ajouter la saisie à l'historique
 
                     return input;
                 }
@@ -79,13 +76,9 @@ public class ConsoleEventHandler
                 if (key.Key == ConsoleKey.UpArrow)
                 {
                     if (_currentHistoryNode == null)
-                    {
                         _currentHistoryNode = _history.Last; // Se positionner au dernier élément
-                    }
                     else if (_currentHistoryNode.Previous != null)
-                    {
                         _currentHistoryNode = _currentHistoryNode.Previous; // Remonter
-                    }
 
                     if (_currentHistoryNode != null)
                     {
@@ -101,13 +94,9 @@ public class ConsoleEventHandler
                 if (key.Key == ConsoleKey.DownArrow)
                 {
                     if (_currentHistoryNode != null && _currentHistoryNode.Next != null)
-                    {
                         _currentHistoryNode = _currentHistoryNode.Next; // Descendre
-                    }
                     else
-                    {
                         _currentHistoryNode = null; // Fin de l'historique
-                    }
 
                     ClearCurrentInput(input);
                     input = _currentHistoryNode?.Value ?? string.Empty;
@@ -175,8 +164,7 @@ public class ConsoleEventHandler
     /// <param name="selectedIndex">Current position in the menu</param>
     private static void DisplayMenu(IEnumerable<string> items, int selectedIndex)
     {
-        for (int i = 0; i < items.Count(); i++)
-        {
+        for (var i = 0; i < items.Count(); i++)
             if (i == selectedIndex)
             {
                 Console.ForegroundColor = ConsoleColor.Green; // Option sélectionnée
@@ -187,7 +175,6 @@ public class ConsoleEventHandler
             {
                 Console.WriteLine($"  {items.ElementAt(i)}");
             }
-        }
     }
 
     /// <summary>
@@ -197,10 +184,7 @@ public class ConsoleEventHandler
     private static void ClearCurrentInput(string input)
     {
         // Efface chaque caractère affiché dans la console
-        for (int i = 0; i < input.Length; i++)
-        {
-            Console.Write("\b \b");
-        }
+        for (var i = 0; i < input.Length; i++) Console.Write("\b \b");
     }
 
     /// <summary>
@@ -265,7 +249,7 @@ public class ConsoleEventHandler
                 }
             }
 
-            System.Threading.Thread.Sleep(100);
+            Thread.Sleep(100);
         }
 
         secureInput.MakeReadOnly();

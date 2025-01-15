@@ -1,8 +1,12 @@
+#region
+
 using System.ComponentModel.Composition;
 using System.Configuration;
 using System.Data.SQLite;
-using Lkhsoft.Dring.Server.Utility.Authentication;
-using Lkhsoft.Dring.Server.Utility.Logger;
+using Lkhsoft.Dring.Shared.Core.Authentication;
+using Lkhsoft.Dring.Shared.Core.Logger;
+
+#endregion
 
 namespace Lkhsoft.Dring.Server.Utility;
 
@@ -32,7 +36,7 @@ public class SessionService : ISessionService
     /// Session callback
     /// </summary>
     private Action<Session>? _sessionCallback;
-    
+
     /// <summary>
     /// Default constructor
     /// </summary>
