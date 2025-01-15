@@ -20,11 +20,7 @@ public class HelpCommand : CommandBase
     ///     Enumeration of all commands
     /// </summary>
     private readonly IEnumerable<Lazy<ICommand, ICommandMetadata>> _commandImports;
-
-    /// <summary>
-    ///     Session service
-    /// </summary>
-    private readonly IContextAccessor _contextAccessor;
+    
 
     /// <summary>
     ///     Default constructor
@@ -32,18 +28,15 @@ public class HelpCommand : CommandBase
     /// <param name="contextAccessor">IContextAccessor part</param>
     /// <param name="commandImports"> ICommand parts</param>
     [ImportingConstructor]
-    public HelpCommand(
-        [Import] IContextAccessor contextAccessor,
-        [ImportMany] IEnumerable<Lazy<ICommand, ICommandMetadata>> commandImports
-    )
+    public HelpCommand([ImportMany] IEnumerable<Lazy<ICommand, ICommandMetadata>> commandImports)
     {
-        _contextAccessor = contextAccessor;
         _commandImports = commandImports;
     }
 
     /// <inheritdoc />
     public override async void Execute(params string[] args)
     {
+        base.Execute();
         if (args.Length > 1)
         {
             Console.WriteLine("Error: Too many parameters. Usage: HELP <command>");

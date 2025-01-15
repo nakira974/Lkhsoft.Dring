@@ -26,6 +26,11 @@ public class ContextAccessor : IContextAccessor
     ///     Current CLI session
     /// </summary>
     private CommandParser CliSession { get; set; }
+    
+    /// <summary>
+    ///     Current text writer
+    /// </summary>
+    private TextWriter TextWriter { get; set; }
 
     /// <summary>
     ///     Default constructor
@@ -48,6 +53,18 @@ public class ContextAccessor : IContextAccessor
     public CommandParser GetCliSession()
     {
         return CliSession;
+    }
+
+    ///<inheritdoc />
+    public void RegisterTextWriter(TextWriter textWriter)
+    {
+        TextWriter = textWriter;
+    }
+
+    ///<inheritdoc />
+    public TextWriter GetTextWriter()
+    {
+        return TextWriter;
     }
 
     ///<inheritdoc />

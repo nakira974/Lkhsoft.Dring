@@ -39,4 +39,16 @@ public interface IContextAccessor
     /// </summary>
     /// <returns>The current CLI session</returns>
     public CommandParser GetCliSession();
+    
+    /// <summary>
+    ///     Current text writer
+    /// </summary>
+    /// <param name="textWriter">Text writer to be registered</param>
+    public void RegisterTextWriter(TextWriter textWriter);
+    
+    /// <summary>
+    ///     Returns the current text writer
+    /// </summary>
+    /// <returns></returns>
+    public TextWriter GetTextWriter();
 }

@@ -1,5 +1,6 @@
 using System.ComponentModel.Composition;
 using Lkhsoft.Dring.Server.Utility;
+using Lkhsoft.Dring.Server.Utility.Authentication;
 using Lkhsoft.Dring.Server.Utility.Logger;
 
 namespace Lkhsoft.Dring.Server.Cli.Commands;
@@ -15,8 +16,17 @@ public abstract class CommandBase : ICommand
     [Import]
     private protected IAppLogger _logger { get; set; }
 
+    /// <summary>
+    ///     Current context accessor
+    /// </summary>
+    [Import] 
+    private protected IContextAccessor _contextAccessor { get; set; }
+
     /// <inheritdoc />
-    public abstract void Execute(params string[] args);
+    public virtual void Execute(params string[] args)
+    {
+        Console.SetOut(_contextAccessor.GetTextWriter());
+    }
 
     /// <summary>
     ///     Checks if an exit request has been made and throws an exception if so

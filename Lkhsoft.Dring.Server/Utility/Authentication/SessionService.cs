@@ -32,7 +32,7 @@ public class SessionService : ISessionService
     /// Session callback
     /// </summary>
     private Action<Session>? _sessionCallback;
-
+    
     /// <summary>
     /// Default constructor
     /// </summary>

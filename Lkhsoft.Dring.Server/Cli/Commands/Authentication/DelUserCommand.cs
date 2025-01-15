@@ -15,6 +15,7 @@ public class DelUserCommand : AuthenticationCommandBase
     /// <inheritdoc />
     public override async void Execute(params string[] args)
     {
+        base.Execute();
         if (args.Length < 1 || args.Length > 1 || String.IsNullOrWhiteSpace(args[0]))
         {
             Console.WriteLine("Usage: DELUSER <username>");
