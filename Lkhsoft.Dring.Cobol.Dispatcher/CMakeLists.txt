@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.30)
-project(cobol-dispatcher C)
+project(transmitter C)
 
 set(CMAKE_C_STANDARD 99)
 
@@ -12,7 +12,7 @@ file(GLOB_RECURSE SOURCES_FILES
 )
 
 file(GLOB_RECURSE COBOL_SOURCES
-        ${PROJECT_SOURCE_DIR}/programs/*.cbl
+        ${PROJECT_SOURCE_DIR}/programs/*.cob
 )
 
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")
@@ -44,43 +44,27 @@ elseif (CMAKE_GENERATOR MATCHES "MinGW Makefiles")
     if (CMAKE_SYSTEM_NAME MATCHES "Linux")
         if (CMAKE_C_COMPILER_ID STREQUAL "GNU")
             set(CMAKE_ROOT_DIRECTORY ${CMAKE_SOURCE_DIR})
-            set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/gnu/)
-            #set(CMAKE_COMPILE_PDB_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/gnu/compiled)
-            #set(CMAKE_PDB_OUTPUT_DIRECTORY  ${CMAKE_SOURCE_DIR}/build/gnu/pdb)
-            set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/gnu/archive)
-            set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/gnu/lib)
+            set(CMAKE_RUNTIME_OUTPUT_DIRECTORY /usr/local/bin)
+            #set(CMAKE_COMPILE_PDB_OUTPUT_DIRECTORY /usr/local/bin/compiled)
+            #set(CMAKE_PDB_OUTPUT_DIRECTORY  /usr/local/bin/pdb)
+            set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY /usr/local/lib/archive)
+            set(CMAKE_LIBRARY_OUTPUT_DIRECTORY /usr/local/lib)
         elseif (CMAKE_C_COMPILER_ID STREQUAL "Clang")
             set(CMAKE_ROOT_DIRECTORY ${CMAKE_SOURCE_DIR})
-            set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/clang/)
-            #set(CMAKE_COMPILE_PDB_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/clang/compiled)
-            #set(CMAKE_PDB_OUTPUT_DIRECTORY  ${CMAKE_SOURCE_DIR}/build/clang/pdb)
-            set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/clang/archive)
-            set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_SOURCE_DIR}/build/clang/lib)
+            set(CMAKE_RUNTIME_OUTPUT_DIRECTORY /usr/local/bin)
+            #set(CMAKE_COMPILE_PDB_OUTPUT_DIRECTORY /usr/local/bin/compiled)
+            #set(CMAKE_PDB_OUTPUT_DIRECTORY  /usr/local/bin/pdb)
+            set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY /usr/local/lib/archive)
+            set(CMAKE_LIBRARY_OUTPUT_DIRECTORY /usr/local/lib)
         endif ()
     endif ()
 endif ()
-
-
-SET(COBOL_COMPILER "C:\\Program Files\\GnuCobol\\bin\\cobc.exe")
-foreach(COBOL_FILE ${COBOL_SOURCES})
-    get_filename_component(COBOL_NAME ${COBOL_FILE} NAME_WE)
-    add_custom_command(
-            OUTPUT ${CMAKE_BINARY_DIR}/${COBOL_NAME}.so
-            COMMAND ${COBOL_COMPILER} -m -o ${CMAKE_BINARY_DIR}/${COBOL_NAME}.so ${CMAKE_SOURCE_DIR}/${COBOL_FILE}
-            DEPENDS ${COBOL_FILE}
-            COMMENT "Compilation de ${COBOL_FILE} en bibliothèque partagée"
-    )
-    list(APPEND COBOL_LIBRARIES ${CMAKE_BINARY_DIR}/${COBOL_NAME}.so)
-endforeach()
-
-# Ajout des bibliothèques COBOL compilées comme dépendances
-add_custom_target(CompileCobol ALL DEPENDS ${COBOL_LIBRARIES})
 
 include_directories(${PROJECT_SOURCE_DIR}/headers)
 
 add_executable(${PROJECT_NAME} ${SOURCES_FILES} ${HEADERS_FILES})
 
-target_link_libraries(${PROJECT_NAME} ${COBOL_LIBRARIES})
+target_link_libraries(${PROJECT_NAME})
 
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} wsock32 ws2_32)
