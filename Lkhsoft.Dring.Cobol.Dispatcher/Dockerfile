@@ -31,8 +31,11 @@ RUN apt-get update && apt-get install -y \
     ufw \
     postfix \
     postgresql \
+    libpq-dev \
+    postgresql-contrib \
     open-cobol \
     cmake \
+    make \
     && rm -rf /var/lib/apt/lists/*
 
 # Créer un utilisateur de service 'transmitter'
@@ -85,6 +88,13 @@ COPY transmitter.service /etc/systemd/system/transmitter.service
 COPY programs /opt/cobol/programs
 COPY modules /opt/cobol/modules
 
+# Télécharger OCESQL
+RUN wget https://github.com/opensourcecobol/Open-COBOL-ESQL/archive/refs/tags/v1.4.tar.gz -O /tmp/ocesql.tar.gz
+RUN tar -xvf /tmp/ocesql.tar.gz -C /tmp
+RUN ./tmp/Open-COBOL-ESQL-1.4/configure
+RUN make -C /tmp/Open-COBOL-ESQL-1.4
+RUN make -C /tmp/Open-COBOL-ESQL-1.4 install
+
 # Compiler chaque module COBOL et l'installer dans /usr/local/lib
 RUN for file in /opt/cobol/modules/*.cob; do \
         cobc -m "$file" -o "/usr/local/lib/$(basename "$file" .cob).so"; \
@@ -98,6 +108,7 @@ RUN for file in /opt/cobol/programs/*.cob; do \
 # Variables d'environnement pour que les programmes COBOL trouvent les modules
 ENV COB_LIBRARY_PATH=/usr/local/lib
 ENV LD_LIBRARY_PATH=/usr/local/lib
+ENV CPPFLAGS=-I/usr/include/postgresql
 
 # Définir les variables d'environnement
 ENV DATABASE_USER=${DATABASE_USER}

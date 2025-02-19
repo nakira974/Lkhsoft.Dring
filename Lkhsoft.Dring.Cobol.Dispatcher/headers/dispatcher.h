@@ -52,8 +52,7 @@ typedef struct {
 } DynamicCall;
 
 /* COBOL dispatcher */
-extern void DISPATCHER(const char *program_name, const char *method_name,
-                       int *arg_count, char *args[], int *status);
+void DISPATCHER(const char *program_name, const char *method_name, int *arg_count, const char **cobol_args, int *status);
 
 /* Client handle for the server */
 void handle_client(socket_t client_socket);

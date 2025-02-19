@@ -5,12 +5,34 @@
 #include "dispatcher.h"
 #endif
 
+
+void DISPATCHER(const char *program_name, const char *method_name, int *arg_count, const char **cobol_args, int *status) {
+    char command[256]; // Buffer pour stocker la commande
+    char args_str[256] = ""; // Buffer pour stocker les arguments concaténés
+
+    // Concaténation des arguments
+    for (int i = 0; i < *arg_count; i++) {
+        strcat(args_str, cobol_args[i]);
+        strcat(args_str, " ");
+    }
+
+    // Construction de la commande en fonction de la plateforme
+#ifdef _WIN32
+    snprintf(command, sizeof(command), "\"%s\" \"%s\" %d %s", program_name, method_name, *arg_count, args_str);
+#else
+    snprintf(command, sizeof(command), "%s %s %d %s", program_name, method_name, *arg_count, args_str);
+#endif
+
+    // Exécution de la commande
+    *status = system(command);
+}
+
 THREAD_FUNC_RETURN dynamic_call_cobol(void *data) {
     DynamicCall *call = (DynamicCall *)data;
     int status = 0;
 
     // Préparer les arguments
-    char *cobol_args[MAX_ARGS];
+    const char *cobol_args[MAX_ARGS];
     for (int i = 0; i < call->arg_count; i++) {
         cobol_args[i] = call->args[i];
     }
