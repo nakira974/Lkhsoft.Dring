@@ -1,6 +1,8 @@
 ﻿services:
   # Service pour le serveur .NET (Dring)
   dring:
+    stdin_open: true
+    tty: true
     build:
       context: ./Lkhsoft.Dring.Server
       dockerfile: Dockerfile
@@ -16,7 +18,7 @@
         aliases:
           - dring.internal.lkhsoft.coffee
 
-  # Service pour le dispatcher COBOL
+  # Service pour le backoffice
   backoffice:
     privileged: true
     build:
