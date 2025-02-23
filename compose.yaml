@@ -1,6 +1,48 @@
 ﻿services:
+  # Service pour le serveur .NET (Dring)
   dring:
-    image: dring
     build:
-      context: .
-      dockerfile: Dring/Dockerfile
+      context: ./Lkhsoft.Dring.Server
+      dockerfile: Dockerfile
+    container_name: dring
+    ports:
+      # Port TCP
+      - "5000:12345"
+      # Port UDP
+      - "5001:54321"
+    environment:
+      - BUILD_CONFIGURATION=Debug
+    depends_on:
+      - backoffice
+    networks:
+      app-network:
+        aliases:
+          - dring.internal.lkhsoft.coffee
+
+  # Service pour le dispatcher COBOL
+  backoffice:
+    build:
+      context: ./Lkhsoft.Dring.Cobol.Dispatcher
+      dockerfile: Dockerfile        
+    container_name: backoffice
+    volumes:
+      - ./Lkhsoft.Dring.Cobol.Dispatcher/certificates:/opt/server/ssl/certificates
+    environment:
+      - BUILDKIT_PROGRESS=plain
+      #- DATABASE_USER=${DATABASE_USER}
+      #- DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      #- SERVER_PORT=${SERVER_PORT}
+      #- CERTIFICATE_PATH=./Lkhsoft.Dring.Cobol.Dispatcher/certificates
+      #- DOMAIN_NAME=internal.lkhsoft.coffee
+    networks:
+      app-network:
+        aliases:
+          - cobol.internal.lkhsoft.coffee
+
+# Configuration des volumes et réseaux
+volumes:
+  postgres-data:
+
+networks:
+  app-network:
+    driver: bridge

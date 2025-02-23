@@ -1,20 +1,21 @@
--- Set default encoding and locale to French_France.1752
+CREATE USER ${PSQL_USER} WITH PASSWORD '${PSQL_PASSWORD}';
+-- Set default encoding and locale to fr_FR.UTF-8
 CREATE DATABASE lkhsoft_dring
     WITH
-    OWNER = ${DATABASE_USER} -- sets the owner of the database
+    OWNER = ${PSQL_USER} -- sets the owner of the database
     ENCODING = 'UTF8' -- sets the character encoding of the database
-    LC_COLLATE = 'French_France.1752' -- sets the collation rules for sorting strings
-    LC_CTYPE = 'French_France.1752' -- sets the character classification rules
-    TABLESPACE = lkhsoft_dring_tablespace_001 -- declares the default tablespace
+    LC_COLLATE = 'fr_FR.UTF-8' -- sets the collation rules for sorting strings
+    LC_CTYPE = 'fr_FR.UTF-8' -- sets the character classification rules
+    TABLESPACE = ${INSTANCE_TABLESPACE_NAME} -- declares the default tablespace
     CONNECTION LIMIT = 256; -- sets a limit on the number of concurrent connections
 
 -- Adds a description to the database
 COMMENT ON DATABASE "lkhsoft_dring"
-    IS 'Lkhsoft.Dring project database';
+    IS 'Lkhsoft.Dring backoffice project database';
 
 BEGIN;
 -- Grant privileges to the database user
-GRANT ALL PRIVILEGES ON DATABASE "lkhsoft_dring" TO ${DATABASE_USER};
+GRANT ALL PRIVILEGES ON DATABASE "lkhsoft_dring" TO ${PSQL_USER};
 COMMIT;
 
 \c "lkhsoft_dring";

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.30)
+cmake_minimum_required(VERSION 3.25.1)
 project(transmitter C)
 
 set(CMAKE_C_STANDARD 99)
@@ -9,10 +9,6 @@ file(GLOB_RECURSE HEADERS_FILES
 )
 file(GLOB_RECURSE SOURCES_FILES
         ${PROJECT_SOURCE_DIR}/src/*.c
-)
-
-file(GLOB_RECURSE COBOL_SOURCES
-        ${PROJECT_SOURCE_DIR}/programs/*.cob
 )
 
 if (CMAKE_SYSTEM_NAME MATCHES "Windows")

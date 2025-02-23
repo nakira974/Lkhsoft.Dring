@@ -1,23 +1,48 @@
+# Utiliser l'image Debian 12.9
+FROM debian:12.9
+
+# Définir les variables d'environnement pour le locale et le clavier
+ENV LANG fr_FR.UTF-8
+ENV LANGUAGE fr_FR:fr
+ENV LC_ALL fr_FR.UTF-8
+
+# Installer les locales et configurer fr_FR.UTF-8
+RUN apt-get update && \
+    apt-get install -y locales && \
+    sed -i 's/# fr_FR.UTF-8 UTF-8/fr_FR.UTF-8 UTF-8/' /etc/locale.gen && \
+    locale-gen fr_FR.UTF-8 && \
+    update-locale LANG=fr_FR.UTF-8
+
+# Configurer le clavier en AZERTY au niveau du système
+RUN apt-get install -y keyboard-configuration && \
+    echo "XKBMODEL=\"pc105\"\nXKBLAYOUT=\"fr\"\nXKBVARIANT=\"\"\nXKBOPTIONS=\"\"" > /etc/default/keyboard && \
+    dpkg-reconfigure -f noninteractive keyboard-configuration
+
+# Nettoyer le cache des paquets pour réduire la taille de l'image
+RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+
 # Port du serveur de dispatch
 ARG server_port=9333
-# Chemin du certificat SSL
-ARG CERTIFICATE_PATH
 # Utilisateur de la base de données
 ARG DATABASE_USER=transmitter
 # Mot de passe de la base de données
 ARG DATABASE_PASSWORD=changeit
+# Domaine du serveur mail
+ARG DOMAIN_NAME=internal.lkh.coffee
+# Nom du tablespace pgsql
+ARG TABLESPACE_NAME=tablespace_0001
 
+RUN apt-get update \
+ && apt-get install -y sudo 
 
-# Utiliser l'image Debian 12.9
-FROM debian:12.9
+RUN adduser --disabled-password --gecos '' docker
+RUN adduser docker sudo
+RUN echo '%sudo ALL=(ALL) NOPASSWD:ALL' >> /etc/sudoers
 
-RUN mkdir /opt/server/ssl
-
-COPY ${CERT_PATH}/cert.pem /opt/server/ssl/server_cert.pem
-COPY ${CERT_PATH}/key.key /opt/server/ssl/server_cert.key
+USER docker
 
 # Mettre à jour et installer les dépendances nécessaires
-RUN apt-get update && apt-get install -y \
+RUN sudo apt-get update && sudo apt-get install -y \
     systemd \
     build-essential \
     wget \
@@ -27,59 +52,58 @@ RUN apt-get update && apt-get install -y \
     apt-transport-https \
     lsb-release \
     ca-certificates \
-    curl \
-    ufw \
     postfix \
     postgresql \
     libpq-dev \
     postgresql-contrib \
-    open-cobol \
+    gnucobol4 \
     cmake \
     make \
-    && rm -rf /var/lib/apt/lists/*
-
+    automake \
+    libtool \
+    autoconf \
+    pkg-config \
+    bison \
+    flex \
+    gawk \
+    libncurses5 \
+    libncurses5-dev \
+    libgmp-dev \
+    tree
 # Créer un utilisateur de service 'transmitter'
-RUN useradd --system --no-create-home --shell /usr/sbin/nologin transmitter
+RUN sudo adduser --system --shell /usr/sbin/nologin transmitter
 
 # Installer PowerShell
-RUN wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
-    && dpkg -i packages-microsoft-prod.deb \
-    && apt-get update \
-    && apt-get install -y powershell \
-    && rm packages-microsoft-prod.deb
+RUN sudo wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
+    && sudo dpkg -i packages-microsoft-prod.deb \
+    && sudo apt-get update \
+    && sudo apt-get install -y powershell \
+    && sudo rm packages-microsoft-prod.deb
 
 # Configurer Postfix
-RUN echo "postfix postfix/main_mailer_type select Internet Site" | debconf-set-selections \
-    && echo "postfix postfix/mailname string mail.lkh.coffee" | debconf-set-selections \
-    && postconf -e 'myhostname = mail.lkh.coffee' \
-    && postconf -e 'mydomain = lkh.coffee' \
-    && postconf -e 'myorigin = /etc/mailname' \
-    && postconf -e 'inet_interfaces = all' \
-    && postconf -e 'inet_protocols = ipv4' \
-    && postconf -e 'mydestination = mail.lkh.coffee, localhost' \
-    && postconf -e 'relayhost =' \
-    && postconf -e 'smtpd_tls_cert_file=/opt/server/ssl/server_cert.pem' \
-    && postconf -e 'smtpd_tls_key_file=/opt/server/ssl/server_cert.key' \
-    && postconf -e 'smtpd_use_tls=yes' \
-    && postconf -e 'smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache' \
-    && postconf -e 'smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache' \
-    && postconf -e 'smtpd_tls_security_level=encrypt' \
-    && postconf -e 'smtpd_tls_auth_only=yes'
+RUN echo "postfix postfix/main_mailer_type select Internet Site" | sudo debconf-set-selections \
+    && echo "postfix postfix/mailname string mail.lkh.coffee" | sudo debconf-set-selections \
+    && sudo postconf -e 'myhostname = mail.${DOMAIN_NAME}' \
+    && sudo postconf -e 'mydomain = ${DOMAIN_NAME}' \
+    && sudo postconf -e 'myorigin = /etc/mailname' \
+    && sudo postconf -e 'inet_interfaces = all' \
+    && sudo postconf -e 'inet_protocols = ipv4' \
+    && sudo postconf -e 'mydestination = mail.${DOMAIN_NAME}, localhost' \
+    && sudo postconf -e 'relayhost =' \
+    && sudo postconf -e 'smtpd_tls_cert_file=/opt/server/ssl/server_cert.pem' \
+    && sudo postconf -e 'smtpd_tls_key_file=/opt/server/ssl/server_cert.key' \
+    && sudo postconf -e 'smtpd_use_tls=yes' \
+    && sudo postconf -e 'smtpd_tls_session_cache_database = btree:${data_directory}/smtpd_scache' \
+    && sudo postconf -e 'smtp_tls_session_cache_database = btree:${data_directory}/smtp_scache' \
+    && sudo postconf -e 'smtpd_tls_security_level=encrypt' \
+    && sudo postconf -e 'smtpd_tls_auth_only=yes'
 
-# Configurer UFW pour autoriser uniquement l'envoi de mails en SSL
-RUN ufw allow 465/tcp \
-    && ufw allow 25/tcp \
-    && ufw enable $server_port/tcp \
-    && ufw allow 5432/tcp 
 
 # Copier et compiler le projet CMake
-COPY . /app
-WORKDIR /app
-RUN cmake --build . && cmake --install .
+COPY . /app/transmitter
 
-# Seul le compte de service du serveur de dispatch peut run le service
-RUN chown transmitter:transmitter /usr/local/bin/transmitter && \
-    chmod 750 /usr/local/bin/transmitter 
+WORKDIR /app/transmitter
+RUN sudo cmake . && sudo cmake --build . && sudo cmake --install .
 
 # Copier le fichier de service daemon
 COPY transmitter.service /etc/systemd/system/transmitter.service
@@ -87,55 +111,110 @@ COPY transmitter.service /etc/systemd/system/transmitter.service
 # Copier et compiler les programmes COBOL
 COPY programs /opt/cobol/programs
 COPY modules /opt/cobol/modules
+COPY modules/accessors /opt/cobol/modules/accessors
 
 # Télécharger OCESQL
-RUN wget https://github.com/opensourcecobol/Open-COBOL-ESQL/archive/refs/tags/v1.4.tar.gz -O /tmp/ocesql.tar.gz
-RUN tar -xvf /tmp/ocesql.tar.gz -C /tmp
-RUN ./tmp/Open-COBOL-ESQL-1.4/configure
-RUN make -C /tmp/Open-COBOL-ESQL-1.4
-RUN make -C /tmp/Open-COBOL-ESQL-1.4 install
-
-# Compiler chaque module COBOL et l'installer dans /usr/local/lib
-RUN for file in /opt/cobol/modules/*.cob; do \
-        cobc -m "$file" -o "/usr/local/lib/$(basename "$file" .cob).so"; \
-    done
-
-# Compiler chaque programme COBOL en liant les modules via le repertoire de la librairie locale du compte de service
-RUN for file in /opt/cobol/programs/*.cob; do \
-        cobc -x "$file" -o "/usr/local/bin/$(basename "$file" .cob)" -L /usr/local/lib -l "$(basename "$file" .cob)"; \
-    done
+ENV CPPFLAGS=-I/usr/include/postgresql
+RUN sudo wget https://github.com/opensourcecobol/Open-COBOL-ESQL/archive/refs/tags/v1.4.tar.gz -O /tmp/ocesql.tar.gz
+RUN sudo tar -xvf /tmp/ocesql.tar.gz -C /usr/local/src && sudo rm /tmp/ocesql.tar.gz
+WORKDIR /usr/local/src/Open-COBOL-ESQL-1.4
+RUN sudo sh configure
+RUN sudo autoreconf -fvi
+RUN sudo -E sh configure
+RUN ls -la
+RUN sudo make
+RUN sudo make install
+RUN sudo ldconfig
+RUN ls -l /usr/local/lib/libocesql.so
 
 # Variables d'environnement pour que les programmes COBOL trouvent les modules
-ENV COB_LIBRARY_PATH=/usr/local/lib
-ENV LD_LIBRARY_PATH=/usr/local/lib
-ENV CPPFLAGS=-I/usr/include/postgresql
+RUN export COBCPY=/usr/local/src/Open-COBOL-ESQL-1.4/copy && COB_PRE_LOAD=/usr/local/lib/libocesql.so
 
-# Définir les variables d'environnement
-ENV DATABASE_USER=${DATABASE_USER}
-ENV DATABASE_PASSWORD=${DATABASE_PASSWORD}
+# Étape 1 : Pré-compiler les accesseurs physiques COBOL (si le dossier n'est pas vide)
+RUN if [ -n "$(ls -A /opt/cobol/modules/accessors/*.cbl 2>/dev/null)" ]; then \
+        for file in /opt/cobol/modules/accessors/*.cbl; do \
+            sudo -E ocesql "$file" "/usr/local/lib/$(basename "$file" .cbl).cob"; \
+        done \
+    fi
 
-# Configurer PostgreSQL
-RUN service postgresql start && \
-    su - postgres -c "psql -c \"CREATE USER ${DATABASE_USER} WITH PASSWORD '${DATABASE_PASSWORD}';\"" && \
-    service postgresql stop
+# Étape 2 : Compiler les accesseurs physiques COBOL (si le dossier n'est pas vide)
+RUN if [ -n "$(ls -A /opt/cobol/modules/accessors/*.cbl 2>/dev/null)" ]; then \
+        for file in /opt/cobol/modules/accessors/*.cbl; do \
+            sudo -E cobc -m -locesql "$file" -o "/usr/local/lib/$(basename "$file" .cbl).so"; \
+        done \
+    fi
+
+# Étape 3 : Compiler les modules COBOL (si le dossier n'est pas vide)
+RUN if [ -n "$(ls -A /opt/cobol/modules/*.cbl 2>/dev/null)" ]; then \
+        for file in /opt/cobol/modules/*.cbl; do \
+            # Vérifier si des accesseurs physiques sont présents
+            if [ -n "$(ls -A /opt/cobol/modules/accessors/*.cbl 2>/dev/null)" ]; then \
+                # Compiler le module en liant les accesseurs physiques (s'ils existent)
+                sudo -E cobc -m -locesql "$file" -o "/usr/local/lib/$(basename "$file" .cbl).so" \
+                     -L /usr/local/lib $(ls /usr/local/lib/*.so | sed 's/^/-l /' | tr '\n' ' '); \
+            else \
+                # Compiler le module sans lier les accesseurs physiques
+                sudo -E cobc -m -locesql "$file" -o "/usr/local/lib/$(basename "$file" .cbl).so"; \
+            fi \
+        done \
+    fi
+
+# Étape 4 : Compiler les programmes COBOL (si le dossier n'est pas vide)
+RUN if [ -n "$(ls -A /opt/cobol/programs/*.cbl 2>/dev/null)" ]; then \
+        for file in /opt/cobol/programs/*.cbl; do \
+            # Extraire le nom du programme sans extension
+            program_name=$(basename "$file" .cbl); \
+            # Vérifier si des modules ou accesseurs physiques sont présents
+            if [ -n "$(ls -A /opt/cobol/modules/*.so 2>/dev/null)" ]; then \
+                # Compiler le programme en liant les modules et accesseurs physiques (s'ils existent)
+                sudo -E cobc -x "$file" -o "/usr/local/bin/$program_name" \
+                     -L /usr/local/lib -locesql $(ls /usr/local/lib/*.cbl | sed 's/^/-l /' | tr '\n' ' '); \
+            else \
+                # Compiler le programme sans lier les modules ni les accesseurs physiques
+                sudo -E cobc -x -locesql "$file" -o "/usr/local/bin/$program_name"; \
+            fi \
+        done \
+    fi
+
+
 
 # Installer gettext pour utiliser envsubst
-RUN apt-get update && apt-get install -y gettext && rm -rf /var/lib/apt/lists/*
+RUN sudo apt-get update && sudo apt-get install -y gettext && sudo rm -rf /var/lib/apt/lists/*
 
 # Copier le script SQL dans un répertoire temporaire
 COPY database.sql /tmp/database.sql
 
 # Remplacer les placeholders dans le script SQL
-RUN envsubst '${DATABASE_USER}' < /tmp/database.sql > /docker-entrypoint-initdb.d/database.sql
-    
+ENV PSQL_USER=${DATABASE_USER}
+ENV PSQL_PASSWORD=${DATABASE_PASSWORD}
+
+# Création du tablespace
+ENV INSTANCE_TABLESPACE_NAME=${TABLESPACE_NAME}
+COPY create_tablespace.sh /tmp/create_tablespace.sh
+RUN sudo chmod +x /tmp/create_tablespace.sh
+RUN sudo -E sh /tmp/create_tablespace.sh
+
+# Supprimer le script de création du tablespace
+RUN sudo rm /tmp/create_tablespace.sh
+
+# Remplacer les placeholders dans le script SQL
+RUN envsubst < /tmp/database.sql > /tmp/create_database.sql
+
+# Création de la base de données et suppression du script SQL avec le mdp en clair
+RUN  sudo service postgresql start &&  \
+     sudo -E -u postgres psql -f /tmp/create_database.sql && \
+     sudo service postgresql stop && \
+     sudo rm /tmp/create_database.sql && sudo rm /tmp/database.sql
+
 # Exposer les ports nécessaires
 EXPOSE 25 465 5432 $server_port
 
+RUN sudo chmod 644 /etc/systemd/system/transmitter.service
+
 # Démarrer les services nécessaires
-RUN systemctl enable postfix && \
-    systemctl enable postgresql \
-    systemctl enable ufw \
-    systemctl enable transmitter \
+RUN sudo systemctl enable postfix && \
+    sudo systemctl enable postgresql
+RUN sudo systemctl enable transmitter
 
 # Démarrer systemd comme processus principal
-CMD ["/lib/systemd/systemd"]
+CMD ["/bin/bash"]
