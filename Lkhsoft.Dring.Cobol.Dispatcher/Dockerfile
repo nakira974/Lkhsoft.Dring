@@ -71,7 +71,9 @@ RUN sudo apt-get update && sudo apt-get install -y \
     libgmp-dev \
     tree
 # Créer un utilisateur de service 'transmitter'
-RUN sudo adduser --system --shell /usr/sbin/nologin transmitter
+
+RUN sudo groupadd transmitter
+RUN sudo useradd -r -s /usr/sbin/nologin -g transmitter transmitter
 
 # Installer PowerShell
 RUN sudo wget https://packages.microsoft.com/config/debian/12/packages-microsoft-prod.deb -O packages-microsoft-prod.deb \
@@ -80,6 +82,7 @@ RUN sudo wget https://packages.microsoft.com/config/debian/12/packages-microsoft
     && sudo apt-get install -y powershell \
     && sudo rm packages-microsoft-prod.deb
 
+VOLUME /opt/server/ssl
 # Configurer Postfix
 RUN echo "postfix postfix/main_mailer_type select Internet Site" | sudo debconf-set-selections \
     && echo "postfix postfix/mailname string mail.lkh.coffee" | sudo debconf-set-selections \
@@ -100,10 +103,12 @@ RUN echo "postfix postfix/main_mailer_type select Internet Site" | sudo debconf-
 
 
 # Copier et compiler le projet CMake
-COPY . /app/transmitter
+COPY ./src /app/transmitter/src
+COPY ./headers /app/transmitter/headers
+COPY ./CMakeLists.txt /app/transmitter
 
 WORKDIR /app/transmitter
-RUN sudo cmake . && sudo cmake --build . && sudo cmake --install .
+RUN sudo mkdir build && cd build && sudo cmake .. && sudo cmake --build . && sudo cmake --install .
 
 # Copier le fichier de service daemon
 COPY transmitter.service /etc/systemd/system/transmitter.service
@@ -199,12 +204,16 @@ RUN sudo rm /tmp/create_tablespace.sh
 
 # Remplacer les placeholders dans le script SQL
 RUN envsubst < /tmp/database.sql > /tmp/create_database.sql
+RUN sudo cat /tmp/create_database.sql
 
 # Création de la base de données et suppression du script SQL avec le mdp en clair
 RUN  sudo service postgresql start &&  \
      sudo -E -u postgres psql -f /tmp/create_database.sql && \
      sudo service postgresql stop && \
      sudo rm /tmp/create_database.sql && sudo rm /tmp/database.sql
+
+VOLUME /var/lib/postgresql/data
+VOLUME /var/lib/postgresql/tablespaces
 
 # Exposer les ports nécessaires
 EXPOSE 25 465 5432 $server_port
@@ -216,5 +225,6 @@ RUN sudo systemctl enable postfix && \
     sudo systemctl enable postgresql
 RUN sudo systemctl enable transmitter
 
+USER root
 # Démarrer systemd comme processus principal
-CMD ["/bin/bash"]
+CMD ["/sbin/init"]

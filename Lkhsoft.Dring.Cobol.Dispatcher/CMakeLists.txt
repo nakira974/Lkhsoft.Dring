@@ -65,3 +65,9 @@ target_link_libraries(${PROJECT_NAME})
 if(WIN32)
     target_link_libraries(${PROJECT_NAME} wsock32 ws2_32)
 endif()
+
+if (CMAKE_SYSTEM_NAME MATCHES "Linux")
+install(TARGETS ${PROJECT_NAME}
+        RUNTIME DESTINATION bin
+)
+endif()
