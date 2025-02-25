@@ -11,8 +11,12 @@
       - BUILD_CONFIGURATION=${ORCHESTRATOR_BUILD_CONFIGURATION}
       - ORCHESTRATOR_TCP_PORT=${ORCHESTRATOR_TCP_PORT}
       - ORCHESTRATOR_UDP_PORT=${ORCHESTRATOR_UDP_PORT}
+      - GITHUB_PACKAGE_TOKEN=${GITHUB_PACKAGE_TOKEN}
     depends_on:
       - backoffice
+    ports:
+      - "60500:60500"
+      - "9091:9091"
     networks:
       app-network:
         aliases:
@@ -35,6 +39,11 @@
       - SERVER_PORT=${SERVER_PORT}
       - TABLESPACE_NAME=${TABLESPACE_NAME}
       - DOMAIN_NAME=${DOMAIN_NAME}
+    ports:
+      - "7432:5432"
+      - "9333:9333"
+      - "25:25"
+      - "435:435"
     networks:
       app-network:
         aliases:

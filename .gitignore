@@ -5,3 +5,4 @@ riderModule.iml
 /_ReSharper.Caches/
 /Lkhsoft.Dring.Cobol.Dispatcher/cmake-build-debug/
 /.env
+/Lkhsoft.Dring.Server/users.db

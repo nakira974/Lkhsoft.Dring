@@ -47,7 +47,6 @@ public class DatabaseInitializer
     /// <param name="username">Username of the new user</param>
     /// <param name="encryptedPassword">Encrypted password</param>
     /// <param name="iv">Initialization vector</param>
-    /// <returns>Une tâche asynchrone.</returns>
     private async Task InsertGuestIfNoExistsAsync()
     {
         const string existsQuery = @"
@@ -66,12 +65,10 @@ public class DatabaseInitializer
         if (!exists)
         {
             const string query = @"
-            INSERT INTO Users (Username, Password, IsConnected, IV)
-            VALUES ('guest', '', 0, 'none');
+            INSERT INTO Users (Username, Password, IsConnected, IV, Role)
+            VALUES ('guest', '', 0, 'none', 'Guest');
         ";
-
-            await connection.OpenAsync();
-
+            
             await using var transaction = connection.BeginTransaction();
             await using var command = new SQLiteCommand(query, connection, transaction);
             try
