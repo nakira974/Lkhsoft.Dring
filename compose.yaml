@@ -1,6 +1,58 @@
 ﻿services:
+  # Service pour le serveur .NET (Dring)
   dring:
-    image: dring
+    stdin_open: true
+    tty: true
     build:
-      context: .
-      dockerfile: Dring/Dockerfile
+      context: ./Lkhsoft.Dring.Server
+      dockerfile: Dockerfile
+    container_name: dring
+    environment:
+      - BUILD_CONFIGURATION=${ORCHESTRATOR_BUILD_CONFIGURATION}
+      - ORCHESTRATOR_TCP_PORT=${ORCHESTRATOR_TCP_PORT}
+      - ORCHESTRATOR_UDP_PORT=${ORCHESTRATOR_UDP_PORT}
+      - GITHUB_PACKAGE_TOKEN=${GITHUB_PACKAGE_TOKEN}
+    depends_on:
+      - backoffice
+    ports:
+      - "60500:60500"
+      - "9091:9091"
+    networks:
+      app-network:
+        aliases:
+          - dring.internal.lkhsoft.coffee
+
+  # Service pour le backoffice
+  backoffice:
+    privileged: true
+    build:
+      context: ./Lkhsoft.Dring.Cobol.Dispatcher
+      dockerfile: Dockerfile
+    container_name: backoffice
+    volumes:
+      - ./Lkhsoft.Dring.Cobol.Dispatcher/certificates:/opt/server/ssl
+      - C:\Users\maxim\Volumes\backoffice\data:/var/lib/postgresql/data
+      - C:\Users\maxim\Volumes\backoffice\tablespaces:/var/lib/postgresql/tablespaces
+    environment:
+      - DATABASE_USER=${DATABASE_USER}
+      - DATABASE_PASSWORD=${DATABASE_PASSWORD}
+      - SERVER_PORT=${SERVER_PORT}
+      - TABLESPACE_NAME=${TABLESPACE_NAME}
+      - DOMAIN_NAME=${DOMAIN_NAME}
+    ports:
+      - "7432:5432"
+      - "9333:9333"
+      - "25:25"
+      - "435:435"
+    networks:
+      app-network:
+        aliases:
+          - backoffice.internal.lkhsoft.coffee
+
+# Configuration des volumes et réseaux
+volumes:
+  postgres-data:
+
+networks:
+  app-network:
+    driver: bridge
