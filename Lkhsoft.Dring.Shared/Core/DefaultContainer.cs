@@ -35,7 +35,8 @@ public class DefaultContainer
                 var catalogs = ConfigurePlugins("PluginsPath", "CommandsPath");
 
                 var catalog = new AggregateCatalog(catalogs);
-                var serverAssembly = Assembly.Load("Lkhsoft.Dring.Server");
+                var assemblyPath = Path.Combine(AppContext.BaseDirectory, "Lkhsoft.Dring.Server.dll");
+                var serverAssembly = Assembly.LoadFrom(assemblyPath);
 
                 // Ajouter les assemblages nécessaires au container
                 catalog.Catalogs.Add(new AssemblyCatalog(Assembly.GetExecutingAssembly()));

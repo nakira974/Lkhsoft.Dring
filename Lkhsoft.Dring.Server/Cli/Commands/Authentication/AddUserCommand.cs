@@ -40,7 +40,7 @@ public class AddUserCommand : AuthenticationCommandBase
         var username = args[0];
         if (await UserExistsAsync(username))
         {
-            Console.WriteLine("User already exists in the database");
+            Console.WriteLine($"User ${username} already exists in the database");
             _logger.LogWarning($"USERADD command failed. User {username} already exists in the database.");
             return;
         }
