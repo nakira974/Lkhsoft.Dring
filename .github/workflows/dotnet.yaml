@@ -20,6 +20,9 @@ jobs:
       - name: Restore dependencies
         run: dotnet restore --configfile ./NuGet.Config
 
+      - name: Add Nuget source
+        run: dotnet nuget add source https://nuget.pkg.github.com/nakira974/index.json --name nakira974.github --username nakira974 --password ${{ secrets.NUGET_API_KEY }} --store-password-in-clear-text
+
       - name: Build
         run: dotnet build --configuration ${{ github.ref == 'refs/heads/dev' && 'Debug' || 'Release' }} --no-restore
 

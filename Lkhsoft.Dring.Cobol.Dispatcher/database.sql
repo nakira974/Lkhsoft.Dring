@@ -1,6 +1,6 @@
 CREATE USER ${PSQL_USER} WITH PASSWORD '${PSQL_PASSWORD}';
 -- Set default encoding and locale to fr_FR.UTF-8
-CREATE DATABASE lkhsoft_dring
+CREATE DATABASE dringdb
     WITH
     OWNER = ${PSQL_USER} -- sets the owner of the database
     ENCODING = 'UTF8' -- sets the character encoding of the database
@@ -10,12 +10,12 @@ CREATE DATABASE lkhsoft_dring
     CONNECTION LIMIT = 256; -- sets a limit on the number of concurrent connections
 
 -- Adds a description to the database
-COMMENT ON DATABASE "lkhsoft_dring"
+COMMENT ON DATABASE "dringdb"
     IS 'Lkhsoft.Dring backoffice project database';
 
 BEGIN;
 -- Grant privileges to the database user
-GRANT ALL PRIVILEGES ON DATABASE "lkhsoft_dring" TO ${PSQL_USER};
+GRANT ALL PRIVILEGES ON DATABASE "dringdb" TO ${PSQL_USER};
 COMMIT;
 
 \c "lkhsoft_dring";
