@@ -118,16 +118,18 @@ internal class Program
 
         while (true)
         {
-            Console.Write("dring/guest > ");
-            var input = ConsoleEventHandler.ReadLine();
-            _logger.LogInfo($"Received command: {input ?? "EXIT"}");
-            if (input is null)
+            if (Console.KeyAvailable)
             {
-                commandParser.ParseAndExecute("EXIT");
-                break;
+                Console.Write("dring/guest > ");
+                var input = ConsoleEventHandler.ReadLine();
+                _logger.LogInfo($"Received command: {input ?? "EXIT"}");
+                if (input is null)
+                {
+                    commandParser.ParseAndExecute("EXIT");
+                    break;
+                }
+                commandParser.ParseAndExecute(input);
             }
-
-            commandParser.ParseAndExecute(input);
         }
 
         Console.WriteLine("Shutting down...");

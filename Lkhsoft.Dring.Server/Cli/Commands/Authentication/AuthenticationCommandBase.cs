@@ -37,7 +37,7 @@ public abstract class AuthenticationCommandBase : CommandBase
     /// </summary>
     /// <param name="username">Username to check</param>
     /// <returns>True if the user already exists, otherwise false</returns>
-    public async Task<bool> UserExistsAsync(string username)
+    protected async Task<bool> UserExistsAsync(string username)
     {
         const string query = @"
             SELECT 1 

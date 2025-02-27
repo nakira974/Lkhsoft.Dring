@@ -1,0 +1,13 @@
+[Unit]
+Description=Transmitter Service
+After=network.target
+
+[Service]
+User=transmitter
+Group=transmitter
+ExecStart=/usr/local/bin/transmitter
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
