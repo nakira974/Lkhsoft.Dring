@@ -16,6 +16,7 @@
     </ItemGroup>
 
     <ItemGroup>
+        <PackageReference Include="Lkhsoft.Dring.Shared" Version="1.0.1-alpha" />
         <PackageReference Include="System.Data.SQLite.Core" Version="1.0.119"/>
         <PackageReference Include="System.Reactive" Version="6.0.1"/>
         <PackageReference Include="YamlDotNet" Version="16.3.0"/>
@@ -39,10 +40,6 @@
         <EmbeddedResource Include="batch.config.yaml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </EmbeddedResource>
-    </ItemGroup>
-
-    <ItemGroup>
-        <ProjectReference Include="..\Lkhsoft.Dring.Shared\Lkhsoft.Dring.Shared.csproj"/>
     </ItemGroup>
 
 </Project>
