@@ -4,5 +4,10 @@ obj/
 riderModule.iml
 /_ReSharper.Caches/
 /Lkhsoft.Dring.Cobol.Dispatcher/cmake-build-debug/
+/Lkhsoft.Dring.Cobol.Dispatcher/cmake-build-release/
 /.env
 /Lkhsoft.Dring.Server/users.db
+/audio_stream/build/
+/audio_stream/cmake-build-debug/
+/audio_stream/cmake-build-release/
+/audio_stream/.idea/
