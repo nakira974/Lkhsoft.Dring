@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Lkhsoft.Dring.Client.Models;
@@ -13,7 +14,14 @@ namespace Lkhsoft.Dring.Client.PageModels
         private readonly CategoryRepository _categoryRepository;
         private readonly ModalErrorHandler _errorHandler;
         private readonly SeedDataService _seedDataService;
+        private readonly IAudioService _audioService;
 
+        [ObservableProperty]
+        private ObservableCollection<AudioDevice> _audioDevices = [];
+        
+        [ObservableProperty]
+        private AudioDevice? _selectedAudioDevice;
+        
         [ObservableProperty]
         private List<CategoryChartData> _todoCategoryData = [];
 
@@ -39,8 +47,10 @@ namespace Lkhsoft.Dring.Client.PageModels
             => Tasks?.Any(t => t.IsCompleted) ?? false;
 
         public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
-            TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler)
+            TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
+            IAudioService audioService)
         {
+            _audioService = audioService;
             _projectRepository = projectRepository;
             _taskRepository = taskRepository;
             _categoryRepository = categoryRepository;
@@ -52,6 +62,7 @@ namespace Lkhsoft.Dring.Client.PageModels
         {
             try
             {
+                LoadAudioDevices();
                 IsBusy = true;
 
                 Projects = await _projectRepository.ListAsync();
@@ -94,6 +105,19 @@ namespace Lkhsoft.Dring.Client.PageModels
             Preferences.Default.Set("is_seeded", true);
             await Refresh();
         }
+        
+        // Charger les périphériques audio
+        private void LoadAudioDevices()
+        {
+            AudioDevices.Clear();
+            var devices = _audioService.GetAudioDevices().Where(x=> x.IsInput);
+
+            foreach (var device in devices)
+            {
+                AudioDevices.Add(new AudioDevice(device));
+            }
+            SelectedAudioDevice = AudioDevices.FirstOrDefault();
+        }
 
         [RelayCommand]
         private async Task Refresh()
@@ -126,6 +150,7 @@ namespace Lkhsoft.Dring.Client.PageModels
         {
             if (!_dataLoaded)
             {
+                LoadAudioDevices();
                 await InitData(_seedDataService);
                 _dataLoaded = true;
                 await Refresh();

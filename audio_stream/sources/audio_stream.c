@@ -1,6 +1,7 @@
 ﻿#include "audio_stream.h"
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 // Buffer pour la gestion des erreurs
 jmp_buf error_jmp_buf;
@@ -72,4 +73,47 @@ void Audio_StopCapture(AudioContext *context) {
 
 void Audio_Shutdown() {
     Pa_Terminate();
+}
+
+Device* GetAudioDevices(int* deviceCount) {
+    TRY {
+        // Obtenir le nombre de périphériques disponibles
+        int numDevices = Pa_GetDeviceCount();
+        if (numDevices < 0) {
+            fprintf(stderr, "PortAudio error: %s\n", Pa_GetErrorText(numDevices));
+            longjmp(error_jmp_buf, 1);
+        }
+
+        Device* devices = (Device*)malloc(numDevices * sizeof(Device));
+        if (!devices) {
+            fprintf(stderr, "Memory allocation failed\n");
+            longjmp(error_jmp_buf, 1);
+        }
+
+        // Remplir le tableau avec les informations des périphériques
+        for (int i = 0; i < numDevices; i++) {
+            const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
+            if (deviceInfo) {
+                strncpy(devices[i].name, deviceInfo->name, sizeof(devices[i].name) - 1);
+                devices[i].name[sizeof(devices[i].name) - 1] = '\0'; // Assurer la terminaison de la chaîne
+                devices[i].maxInputChannels = deviceInfo->maxInputChannels;
+                devices[i].maxOutputChannels = deviceInfo->maxOutputChannels;
+                devices[i].defaultSampleRate = deviceInfo->defaultSampleRate;
+            }
+        }
+
+        // Retourner le tableau et le nombre de périphériques
+        *deviceCount = numDevices;
+        return devices;
+    }
+    CATCH {
+        // En cas d'erreur, retourner NULL
+        *deviceCount = 0;
+        return NULL;
+    }
+    FINALLY;
+}
+
+void FreeAudioDevices(Device* devices) {
+    free(devices);
 }

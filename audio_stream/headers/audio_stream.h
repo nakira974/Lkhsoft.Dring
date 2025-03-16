@@ -22,6 +22,18 @@ typedef struct {
 #ifdef __cplusplus
 extern "C" {
 #endif
+    /* Structure to store audio device information */
+    typedef struct {
+        /* Device information */
+        char name[256];
+        /* Maximum number of input channels */
+        int maxInputChannels;
+        /* Maximum number of output channels */
+        int maxOutputChannels;
+        /* Default sample rate */
+        double defaultSampleRate;
+    } Device;
+
     /* Initialize portaudio */
     bool Audio_Initialize();
 
@@ -33,6 +45,12 @@ extern "C" {
 
     /* Frees the resources used by portaudio */
     void Audio_Shutdown();
+
+    /* Get the list of audio devices */
+    Device* GetAudioDevices(int* deviceCount);
+
+    /* Frees the devices struct array*/
+    void FreeAudioDevices(Device* devices);
 #ifdef __cplusplus
 }
 #endif

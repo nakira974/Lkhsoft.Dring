@@ -35,6 +35,16 @@
             <pullToRefresh:SfPullToRefresh.PullableContent>
                 <ScrollView>
                     <VerticalStackLayout Spacing="{StaticResource LayoutSpacing}" Padding="{StaticResource LayoutPadding}">
+                        <!-- Picker pour les périphériques audio -->
+                        <Label Text="Audio Devices" Style="{StaticResource Title2}"/>
+                        <Picker
+                            Title="Select an audio device"
+                            ItemsSource="{Binding AudioDevices}"
+                            ItemDisplayBinding="{Binding Name}"
+                            SelectedItem="{Binding SelectedAudioDevice, Mode=TwoWay}"
+                            HorizontalOptions="FillAndExpand"
+                            VerticalOptions="Center" />
+
                         <controls:CategoryChart />
                         <Label Text="Projects" Style="{StaticResource Title2}"/>
                         <ScrollView Orientation="Horizontal" Margin="-30,0">
