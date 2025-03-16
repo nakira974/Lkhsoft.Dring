@@ -17,15 +17,20 @@ public class AudioService : IAudioService
     private IntPtr _audioContext;
     
     /// <summary>
+    /// Audio data callback
+    /// </summary>
+    private IAudioService.AudioDataCallback _audioDataCallback;
+    
+    /// <summary>
     /// Native library name
     /// </summary>
-    private const string NativeLibraryName = "libaudio_stream";
+    private const string nativeLibraryName = "libaudio_stream";
     
     /// <summary>
     /// Selected audio device
     /// </summary>
     public Device SelectedDevice { get; set; }
-
+    
     /// <summary>
     /// Default constructor
     /// </summary>
@@ -43,12 +48,32 @@ public class AudioService : IAudioService
     }
 
     /// <inheritdoc/>
-    public void StartCapture(int sampleRate, int numChannels)
+    public void StartCapture(int hostApiIndex, int sampleRate, int numChannels, int bufferCapacity)
     {
-        if (!Audio_StartCapture(_audioContext, sampleRate, numChannels))
+        if (!Audio_StartCapture(_audioContext, hostApiIndex, sampleRate, numChannels, bufferCapacity))
         {
-            throw new AudioCaptureException(this.SelectedDevice, "Failed to start audio capture");
+            throw new Exception("Failed to start audio capture.");
         }
+    }
+    
+    /// <inheritdoc/>
+    public float[] GetAudioData(int bufferSize)
+    {
+        float[] buffer = new float[bufferSize];
+        int samplesRead = Audio_GetAudioData(_audioContext, buffer, bufferSize);
+        if (samplesRead == 0)
+        {
+            throw new Exception("No audio data available.");
+        }
+        return buffer;
+    }
+    
+    public void RegisterCallback(IAudioService.AudioDataCallback callback)
+    {
+        _audioDataCallback = callback; // Garder une référence pour éviter le GC
+        IntPtr callbackPtr = Marshal.GetFunctionPointerForDelegate(callback);
+        Marshal.WriteIntPtr(_audioContext + Marshal.OffsetOf<AudioContext>("ManagedCallback"), callbackPtr);
+        RegisterAudioDataCallback(_audioContext, callback);
     }
 
     /// <inheritdoc/>
@@ -63,23 +88,6 @@ public class AudioService : IAudioService
         Audio_Shutdown();
         Marshal.FreeHGlobal(_audioContext);
         GC.SuppressFinalize(this);
-    }
-
-    /// <summary>
-    /// Loads the native library
-    /// </summary>
-    /// <exception cref="DllNotFoundException">The native library could not be found in the assembly output</exception>
-    private static void LoadNativeLibrary()
-    {
-        try
-        {
-            // Charger la bibliothèque native
-            NativeLibrary.Load(NativeLibraryName, Assembly.GetCallingAssembly(), DllImportSearchPath.AssemblyDirectory );
-        }
-        catch (Exception ex)
-        {
-            throw new DllNotFoundException($"Failed to load native library '{NativeLibraryName}'", ex);
-        }
     }
     
     /// <inheritdoc/>
@@ -104,35 +112,55 @@ public class AudioService : IAudioService
         FreeAudioDevices(devicesPtr);
         return devices;
     }
+    #region PRIVATE METHODS
+    /// <summary>
+    /// Loads the native library
+    /// </summary>
+    /// <exception cref="DllNotFoundException">The native library could not be found in the assembly output</exception>
+    private static void LoadNativeLibrary()
+    {
+        try
+        {
+            // Charger la bibliothèque native
+            NativeLibrary.Load(nativeLibraryName, Assembly.GetCallingAssembly(), DllImportSearchPath.AssemblyDirectory );
+        }
+        catch (Exception ex)
+        {
+            throw new DllNotFoundException($"Failed to load native library '{nativeLibraryName}'", ex);
+        }
+    }
+    #endregion
+    
     #region NATIVE METHODS
     /// <summary>
     /// Initializes the audio library
     /// </summary>
     /// <returns>True if PortAudio has been correctly initialized, otherwise false</returns>
-    [DllImport(NativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(nativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
     private static extern bool Audio_Initialize();
 
     /// <summary>
     /// Starts capturing audio
     /// </summary>
     /// <param name="context">PortAudio context</param>
+    /// <param name="hostApiContext">Device index</param>
     /// <param name="sampleRate">Capture sample rate</param>
     /// <param name="numChannels">Number of channels</param>
+    /// <param name="bufferCapacity">Buffer capacity</param>
     /// <returns>True if the capture has been correctly initialized, otherwise false</returns>
-    [DllImport(NativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
-    private static extern bool Audio_StartCapture(IntPtr context, int sampleRate, int numChannels);
-
+    [DllImport(nativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
+    private static extern bool Audio_StartCapture(IntPtr context, int hostApiContext, int sampleRate, int numChannels, int bufferCapacity);
     /// <summary>
     /// Stops capturing audio
     /// </summary>
     /// <param name="context">PortAudio context to be destroyed</param>
-    [DllImport(NativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(nativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
     private static extern void Audio_StopCapture(IntPtr context);
 
     /// <summary>
     /// Shuts down the audio library
     /// </summary>
-    [DllImport(NativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(nativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
     private static extern void Audio_Shutdown();
     
     /// <summary>
@@ -140,15 +168,32 @@ public class AudioService : IAudioService
     /// </summary>
     /// <param name="deviceCount">Number of available devices on the system</param>
     /// <returns>A pointer to malloc allocated Device struct array</returns>
-    [DllImport(NativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(nativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
     private static extern IntPtr GetAudioDevices(out int deviceCount);
     
     /// <summary>
     /// Frees the audio devices array
     /// </summary>
     /// <param name="devices">Device struct array to desallocated</param>
-    [DllImport(NativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
+    [DllImport(nativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
     private static extern void FreeAudioDevices(IntPtr devices);
+    
+    /// <summary>
+    /// Gets the audio data from the audio stream
+    /// </summary>
+    /// <param name="context">Audio context</param>
+    /// <param name="bufferSize">Buffer size</param>
+    /// <returns>A pointer to the audio data</returns>
+    [DllImport(nativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
+    private static extern int Audio_GetAudioData(IntPtr context, float[] buffer, int bufferSize);
+    
+    /// <summary>
+    /// Registers the audio data callback
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="callback"></param>
+    [DllImport("audio_stream", CallingConvention = CallingConvention.Cdecl)]
+    private static extern void RegisterAudioDataCallback(IntPtr context, IAudioService.AudioDataCallback callback);
     #endregion
 }
 
@@ -158,6 +203,10 @@ public class AudioService : IAudioService
 [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Ansi)]
 public record struct Device
 {
+    /// <summary>
+    /// Index of the device
+    /// </summary>
+    public int HostApiIndex;
     /// <summary>
     /// Device name
     /// </summary>
@@ -175,12 +224,10 @@ public record struct Device
     /// Default sample rate
     /// </summary>
     public double DefaultSampleRate;
-
     /// <summary>
     /// Is the device an output ?
     /// </summary>
     public bool IsInput => this.MaxInputChannels > 0;
-    
     /// <summary>
     /// Is the device an output ?
     /// </summary>
@@ -209,4 +256,12 @@ public struct AudioContext
     /// Is the audio stream running ?
     /// </summary>
     public bool IsRunning;
+    /// <summary>
+    /// Pointer to the audio buffer
+    /// </summary>
+    public IntPtr CircularBuffer;
+    /// <summary>
+    /// Managed callback for audio stream
+    /// </summary>
+    public IntPtr ManagedCallback; 
 }
