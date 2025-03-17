@@ -9,7 +9,7 @@ public interface IAudioService : IDisposable
     /// Audio data callback delegate
     /// </summary>
     public delegate void AudioDataCallback(float[] data, int size);
-    
+
     /// <summary>
     /// Starts capturing audio
     /// </summary>
@@ -37,5 +37,4 @@ public interface IAudioService : IDisposable
     /// </summary>
     /// <returns>Available audio devices on the system</returns>
     Device[] GetAudioDevices();
-
 }

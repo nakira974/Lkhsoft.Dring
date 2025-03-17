@@ -8,7 +8,7 @@ if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(LKHSOFT_DRING_CLIENT_ANDROID_BUILD_OUTPUT ${CMAKE_SOURCE_DIR}/..//Lkhsoft.Dring.Client/bin/Debug/net9.0-android)
     set(LKHSOFT_DRING_CLIENT_IOS_BUILD_OUTPUT ${CMAKE_SOURCE_DIR}/../Lkhsoft.Dring.Client/bin/Debug/net9.0-ios/iossimulator-x64)
     set(LKHSOFT_DRING_CLIENT_MACOS_BUILD_OUTPUT ${CMAKE_SOURCE_DIR}/../Lkhsoft.Dring.Client/bin/Debug/net9.0-maccatalyst/maccatalyst-x64)
-
+    add_compile_options(-g -ggdb)
 else ()
     set(LKHSOFT_DRING_CLIENT_WINDOWS_BUILD_OUTPUT ${CMAKE_SOURCE_DIR}/../Lkhsoft.Dring.Client/bin/Release/net9.0-windows10.0.19041.0)
     set(LKHSOFT_DRING_CLIENT_ANDROID_BUILD_OUTPUT ${CMAKE_SOURCE_DIR}/../Lkhsoft.Dring.Client/bin/Release/net9.0-android)
@@ -91,6 +91,18 @@ set_target_properties(portaudio PROPERTIES
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
 )
+
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows" AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    find_program(CV2PDB_EXECUTABLE cv2pdb PATHS "C:\\Program Files (x86)\\cv2pdb-0.53" NO_DEFAULT_PATH)
+    if(CV2PDB_EXECUTABLE)
+        add_custom_command(TARGET ${CMAKE_PROJECT_NAME} POST_BUILD
+                COMMAND ${CV2PDB_EXECUTABLE} $<TARGET_FILE:${CMAKE_PROJECT_NAME}>
+                COMMENT "Converting debug symbols to .pdb format"
+        )
+    else()
+        message(WARNING "cv2pdb not found. .pdb files will not be generated.")
+    endif()
+endif()
 
 message(STATUS "################# BUILD CONFIGURATION #################")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")

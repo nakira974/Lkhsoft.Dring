@@ -5,11 +5,13 @@ using System.Configuration;
 using System.Data.SQLite;
 using System.Globalization;
 using System.Net;
+using System.Net.Security;
 using System.Net.Sockets;
 using System.Security;
-using System.Security.Cryptography;
+using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
+using System.Text.Json;
 using Lkhsoft.Dring.Server.Utility;
 using Lkhsoft.Dring.Server.Utility.Core;
 using Lkhsoft.Dring.Shared.Cli;
@@ -64,12 +66,12 @@ internal class Program
     /// <summary>
     ///     Tcp channels for each client
     /// </summary>
-    private static readonly ConcurrentDictionary<string, NetworkStream> Clients = new();
+    private static readonly ConcurrentDictionary<ConnectedUser?, SslStream> Clients = new();
 
     /// <summary>
     ///     Send channels for each client
     /// </summary>
-    private static readonly ConcurrentDictionary<string, UdpClient?> SendChannels = new();
+    private static readonly ConcurrentDictionary<ConnectedUser?, UdpClient?> SendChannels = new();
 
     /// <summary>
     ///     Message priority queue
@@ -117,7 +119,6 @@ internal class Program
         SetupSignalHandlers();
 
         while (true)
-        {
             if (Console.KeyAvailable)
             {
                 Console.Write("dring/guest > ");
@@ -128,9 +129,9 @@ internal class Program
                     commandParser.ParseAndExecute("EXIT");
                     break;
                 }
+
                 commandParser.ParseAndExecute(input);
             }
-        }
 
         Console.WriteLine("Shutting down...");
     }
@@ -173,22 +174,38 @@ internal class Program
             try
             {
                 var client = await listener.AcceptTcpClientAsync();
-                var stream = client.GetStream();
-
-                // Authenticate client
-                var id = await AuthenticateClient(stream);
-                if (string.IsNullOrEmpty(id))
+                try
                 {
+                    var stream = client.GetStream();
+                    var sslStream = new SslStream(client.GetStream(), true);
+                    await sslStream.AuthenticateAsServerAsync(
+                        ServerCertificate ?? throw new InvalidOperationException("Server certificate is null"),
+                        false,
+                        SslProtocols.Tls12,
+                        false);
+
+
+                    // Authenticate client
+                    var connectedUser = await AuthenticateClient(sslStream);
+                    if (connectedUser is null)
+                    {
+                        client.Close();
+                        continue;
+                    }
+
+                    Console.WriteLine($"Client connected: {connectedUser}");
+                    Clients.TryAdd(connectedUser, sslStream);
+                    SendChannels.TryAdd(connectedUser, new UdpClient());
+
+
+                    _ = Job(connectedUser, stream);
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Erreur d'authentification: {ex.Message}");
                     client.Close();
                     continue;
                 }
-
-                Clients.TryAdd(id, stream);
-                SendChannels.TryAdd(id, new UdpClient());
-
-                Console.WriteLine($"Client connected: {id}");
-
-                _ = Job(id, stream);
             }
             catch (Exception ex)
             {
@@ -223,9 +240,9 @@ internal class Program
     /// <summary>
     ///     Processes messages for a specific client
     /// </summary>
-    /// <param name="idClient">The ID of the client</param>
+    /// <param name="connectedUser">The ID of the client</param>
     /// <param name="stream">The client's stream</param>
-    private static async Task Job(string? idClient, NetworkStream stream)
+    private static async Task Job(ConnectedUser? connectedUser, NetworkStream stream)
     {
         while (stream.CanRead)
             try
@@ -234,13 +251,13 @@ internal class Program
                 var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
                 if (bytesRead == 0)
                 {
-                    Console.WriteLine($"Client disconnected: {idClient}");
-                    Clients.TryRemove(idClient ?? throw new ArgumentNullException(nameof(idClient)), out _);
-                    SendChannels.TryRemove(idClient, out _);
+                    Console.WriteLine($"Client disconnected: {connectedUser?.UserName}");
+                    Clients.TryRemove(connectedUser ?? throw new ArgumentNullException(nameof(connectedUser)), out _);
+                    SendChannels.TryRemove(connectedUser, out _);
                     break;
                 }
 
-                var message = new Message(idClient, buffer, 0, bytesRead, ServerCertificate);
+                var message = new Message(connectedUser, buffer, 0, bytesRead, ServerCertificate);
                 lock (GlobalPriorityQueue)
                 {
                     GlobalPriorityQueue.Enqueue(message, 0);
@@ -248,7 +265,7 @@ internal class Program
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in Job loop for client {idClient}: {ex.Message}");
+                Console.WriteLine($"Error in Job loop for client {connectedUser}: {ex.Message}");
                 break;
             }
     }
@@ -276,7 +293,7 @@ internal class Program
                 }
 
                 if (SendChannels.TryGetValue(
-                        message.ClientId ?? throw new InvalidOperationException("Client id is null"),
+                        message.User ?? throw new InvalidOperationException("Client id is null"),
                         out var udpClient))
                     if (udpClient != null)
                         await udpClient.SendAsync(message.Data, message.Data.Length);
@@ -292,30 +309,22 @@ internal class Program
     /// </summary>
     /// <param name="stream">The client's network stream</param>
     /// <returns>The client ID if authentication succeeds, null otherwise</returns>
-    private static async Task<string?> AuthenticateClient(NetworkStream stream)
+    private static async Task<ConnectedUser?> AuthenticateClient(SslStream stream)
     {
         try
         {
-            var buffer = new byte[256];
-            var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length);
-            if (bytesRead > 0)
-            {
-                var encryptedData = buffer.AsSpan(0, bytesRead).ToArray();
-                using var rsa = (ServerCertificate ?? throw new InvalidOperationException("Invalid certificate"))
-                    .GetRSAPrivateKey();
-                var decryptedData = rsa?.Decrypt(encryptedData, RSAEncryptionPadding.Pkcs1);
-                string?[] authData = Encoding.UTF8.GetString(decryptedData ?? Array.Empty<byte>()).Split(':');
-
-                if (authData.Length == 2)
+            var authDataBuffer = new byte[2048];
+            var read = await stream.ReadAsync(authDataBuffer, 0, authDataBuffer.Length);
+            Array.Resize(ref authDataBuffer, read);
+            var memoryStream = new MemoryStream(authDataBuffer);
+            var connectedUser = await JsonSerializer.DeserializeAsync<ConnectedUser>(memoryStream,
+                new JsonSerializerOptions()
                 {
-                    var user = authData[0];
-                    var password = new SecureString();
-                    foreach (var c in authData[1]!) password.AppendChar(c);
-
-                    var isAuthenticated = await Auth(user, password);
-                    if (isAuthenticated) return user;
-                }
-            }
+                    PropertyNameCaseInsensitive = false
+                });
+            if (connectedUser is null) throw new InvalidOperationException("Could not deserialize user");
+            var isAuthenticated = await Auth(connectedUser);
+            if (isAuthenticated) return connectedUser;
         }
         catch (Exception ex)
         {
@@ -355,19 +364,22 @@ internal class Program
     /// <summary>
     ///     Authenticates a user against the SQLite database
     /// </summary>
-    /// <param name="user">The username</param>
-    /// <param name="password">The password as a SecureString</param>
+    /// <param name="user">The connected username</param>
     /// <returns>True if authentication succeeds, false otherwise</returns>
-    private static async Task<bool> Auth(string? user, SecureString password)
+    private static async Task<bool> Auth(ConnectedUser user)
     {
         try
         {
-            await using var connection = new SQLiteConnection("Data Source=auth.db;");
+            var connectionString = ConfigurationManager.ConnectionStrings["ServerDB"].ConnectionString
+                                   ?? throw new InvalidOperationException("Datasource connection string not found");
+
+            await using var connection = new SQLiteConnection(connectionString);
             await connection.OpenAsync();
 
-            await using var command = new SQLiteCommand("CALL Auth(@user, @password)", connection);
-            command.Parameters.AddWithValue("@user", user);
-            command.Parameters.AddWithValue("@password", new NetworkCredential(string.Empty, password).Password);
+            var query = "SELECT COUNT(1) FROM Users WHERE Username = @Username AND Password = @Password";
+            await using var command = new SQLiteCommand(query, connection);
+            command.Parameters.AddWithValue("@Username", user.UserName);
+            command.Parameters.AddWithValue("@Password", user.EncryptedPassword);
 
             var result = (long) (await command.ExecuteScalarAsync() ?? throw new SQLiteException("SQL error"));
             return result == 1;
@@ -401,7 +413,8 @@ internal class Program
             // Convert the plain-text password to SecureString
 
             // Load the certificate using the secure password
-            var certificate = new X509Certificate2(certificatePath, secureString);
+            var certificate = new X509Certificate2(certificatePath, secureString,
+                X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet);
 
             Console.WriteLine("Certificate loaded successfully!");
             return certificate;
@@ -443,25 +456,15 @@ internal class Program
 /// </summary>
 public class Message : IComparable<Message>
 {
-    public Message(string? clientId, byte[] data, int offset, int count, X509Certificate2? serverCertificate)
+    public Message(ConnectedUser? user, byte[] data, int offset, int count, X509Certificate2? serverCertificate)
     {
-        ClientId = clientId;
-
-        try
-        {
-            using var rsa = (serverCertificate ?? throw new ArgumentNullException(nameof(serverCertificate)))
-                .GetRSAPrivateKey();
-            if (rsa != null) Data = rsa.Encrypt(data.AsSpan(offset, count).ToArray(), RSAEncryptionPadding.Pkcs1);
-            else throw new SecurityException("RSA");
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Error encrypting data in Message: {ex.Message}");
-            Data = Array.Empty<byte>();
-        }
+        User = user;
+        Data = new byte[count];
+        var stream = new MemoryStream(data, offset, count);
+        stream.Write(Data, offset, count);
     }
 
-    public string? ClientId { get; }
+    public ConnectedUser? User { get; }
     public byte[] Data { get; }
 
     /// <summary>
@@ -471,6 +474,6 @@ public class Message : IComparable<Message>
     /// <returns>An integer indicating the relative order of the messages</returns>
     public int CompareTo(Message? other)
     {
-        return other is null ? 1 : StringComparer.Ordinal.Compare(ClientId, other.ClientId);
+        return other is null ? 1 : StringComparer.Ordinal.Compare(User.UserName, other.User.UserName);
     }
 }

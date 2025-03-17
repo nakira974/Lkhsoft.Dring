@@ -1,10 +1,9 @@
-namespace Lkhsoft.Dring.Client.Pages.Controls
+namespace Lkhsoft.Dring.Client.Pages.Controls;
+
+public partial class TagView
 {
-    public partial class TagView
+    public TagView()
     {
-        public TagView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

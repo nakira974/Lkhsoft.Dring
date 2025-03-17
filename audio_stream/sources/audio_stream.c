@@ -52,6 +52,7 @@ bool Audio_Initialize() {
     FINALLY;
 }
 
+
 bool Audio_StartCapture(AudioContext *context, int hostApiContext, int sampleRate, int numChannels, int bufferCapacity) {
     TRY {
         context->sampleRate = sampleRate;

@@ -1,4 +1,8 @@
+#region
+
 using Device = Lkhsoft.Dring.Client.Services.Device;
+
+#endregion
 
 namespace Lkhsoft.Dring.Client.Exceptions;
 

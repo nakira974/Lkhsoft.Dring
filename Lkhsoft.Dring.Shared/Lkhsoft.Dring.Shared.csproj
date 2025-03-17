@@ -39,11 +39,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="logo.png" />
+        <None Remove="logo.png"/>
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="logo.png" Pack="true" PackagePath="/" />
+        <None Include="logo.png" Pack="true" PackagePath="/"/>
     </ItemGroup>
-    
+
 </Project>

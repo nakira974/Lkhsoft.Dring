@@ -2,8 +2,6 @@
 
 using System.Configuration;
 using System.Data.SQLite;
-using Lkhsoft.Dring.Server.Cli.Commands.Authentication;
-using Lkhsoft.Dring.Shared.Core;
 
 #endregion
 
@@ -40,7 +38,7 @@ public class DatabaseInitializer
         await command.ExecuteNonQueryAsync();
         await InsertGuestIfNoExistsAsync();
     }
-    
+
     /// <summary>
     /// Create a guest in the database if not exists
     /// </summary>
@@ -68,7 +66,7 @@ public class DatabaseInitializer
             INSERT INTO Users (Username, Password, IsConnected, IV, Role)
             VALUES ('guest', '', 0, 'none', 'Guest');
         ";
-            
+
             await using var transaction = connection.BeginTransaction();
             await using var command = new SQLiteCommand(query, connection, transaction);
             try
