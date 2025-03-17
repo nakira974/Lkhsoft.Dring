@@ -10,6 +10,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using Lkhsoft.Dring.Client.Models;
+using Lkhsoft.Dring.Messages;
 
 #endregion
 
@@ -33,12 +34,19 @@ public class AuthService : IAuthService
     {
         var iv = StringExtensions.GetDeterministicIv(username);
         var encryptedPassword = EncryptWithVersion(password, Encoding.UTF8.GetBytes(iv));
-        var appUser = new AppUser {UserName = username, EncryptedPassword = encryptedPassword ?? string.Empty};
         bool result;
         SslStream = null;
+
+        var jsonSerializationOptions = new JsonSerializerOptions() {WriteIndented = false, DefaultBufferSize = 2048};
+        
+        var appUser = new ConnectedUser {UserName = username, EncryptedPassword = encryptedPassword ?? string.Empty};
         var stream = new MemoryStream();
-        await JsonSerializer.SerializeAsync<AppUser>(stream, appUser,
-            new JsonSerializerOptions() {WriteIndented = false, DefaultBufferSize = 2048});
+        await JsonSerializer.SerializeAsync<ConnectedUser>(stream, appUser, jsonSerializationOptions);
+        
+        var authMessage = new Message(MessageType.Authentication, stream);
+        stream = new MemoryStream();
+        await JsonSerializer.SerializeAsync<Message>(stream, authMessage,jsonSerializationOptions);
+        
         try
         {
             await _tcpClient.ConnectAsync("localhost", 9091);
@@ -46,7 +54,17 @@ public class AuthService : IAuthService
                 new RemoteCertificateValidationCallback(ValidateServerCertificate));
             await SslStream.AuthenticateAsClientAsync("localhost");
             await SslStream.WriteAsync(stream.ToArray());
-            result = true;
+            var authData = new byte[1024];
+            var byteRead = await SslStream.ReadAsync(authData, 0, authData.Length);
+            Array.Resize(ref authData, byteRead);
+            var response = JsonSerializer.Deserialize<Message>(authData);
+            if (response is null || response.MessageType != MessageType.Authentication || response.Data is null || response.Data.Length == 0)
+                throw new AuthenticationException("Authentication failed: invalid response");
+            result = response.Data[0] switch
+            {
+                0x1 => true,
+                _ => throw new InvalidCredentialException("Invalid credentials")
+            };
         }
         catch (Exception e)
         {

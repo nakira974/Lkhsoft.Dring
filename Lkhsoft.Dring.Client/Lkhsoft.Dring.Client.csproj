@@ -84,4 +84,8 @@
         <None Remove="global.json"/>
     </ItemGroup>
 
+    <ItemGroup>
+      <ProjectReference Include="..\Lkhsoft.Dring.Messages\Lkhsoft.Dring.Messages.csproj" />
+    </ItemGroup>
+
 </Project>

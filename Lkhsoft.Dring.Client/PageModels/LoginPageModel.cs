@@ -40,7 +40,14 @@ public partial class LoginPageModel : ObservableObject
         try
         {
             _sessionService.LogOn(UserName, securePassword);
-            await Shell.Current.GoToAsync(nameof(MainPage));
+            var newWindow = new Window(new AppShell());
+            Application.Current?.OpenWindow(newWindow);
+
+            // Fermer la Window actuelle (celle de la page de login)
+            if (Application.Current?.Windows.Count > 0)
+            {
+                Application.Current.CloseWindow(Application.Current.Windows[0]);
+            }
         }
         catch (Exception ex)
         {

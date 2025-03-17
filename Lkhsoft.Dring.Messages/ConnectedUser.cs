@@ -4,12 +4,12 @@ using System.Text.Json.Serialization;
 
 #endregion
 
-namespace Lkhsoft.Dring.Client.Models;
+namespace Lkhsoft.Dring.Messages;
 
 /// <summary>
 /// User information
 /// </summary>
-public record AppUser
+public record ConnectedUser
 {
     /// <summary>
     /// Username of the connected user

@@ -7,18 +7,19 @@ using System.Globalization;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Runtime.Serialization;
 using System.Security;
 using System.Security.Authentication;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
+using Lkhsoft.Dring.Messages;
 using Lkhsoft.Dring.Server.Utility;
 using Lkhsoft.Dring.Server.Utility.Core;
 using Lkhsoft.Dring.Shared.Cli;
 using Lkhsoft.Dring.Shared.Core;
 using Lkhsoft.Dring.Shared.Core.Authentication;
 using Lkhsoft.Dring.Shared.Core.Logger;
-
 #endregion
 
 namespace Lkhsoft.Dring.Server;
@@ -66,13 +67,8 @@ internal class Program
     /// <summary>
     ///     Tcp channels for each client
     /// </summary>
-    private static readonly ConcurrentDictionary<ConnectedUser?, SslStream> Clients = new();
-
-    /// <summary>
-    ///     Send channels for each client
-    /// </summary>
-    private static readonly ConcurrentDictionary<ConnectedUser?, UdpClient?> SendChannels = new();
-
+    private static readonly ConcurrentDictionary<ConnectedUser, SslStream> Clients = new();
+    
     /// <summary>
     ///     Message priority queue
     /// </summary>
@@ -107,7 +103,6 @@ internal class Program
 
         _ = Task.Run(() => ReceiveTcp());
         _ = Task.Run(() => ReceiveUdp());
-        _ = Task.Run(() => Transmit());
 
         await Task.Delay(100);
         await _semaphore.WaitAsync();
@@ -195,8 +190,6 @@ internal class Program
 
                     Console.WriteLine($"Client connected: {connectedUser}");
                     Clients.TryAdd(connectedUser, sslStream);
-                    SendChannels.TryAdd(connectedUser, new UdpClient());
-
 
                     _ = Job(connectedUser, stream);
                 }
@@ -253,11 +246,10 @@ internal class Program
                 {
                     Console.WriteLine($"Client disconnected: {connectedUser?.UserName}");
                     Clients.TryRemove(connectedUser ?? throw new ArgumentNullException(nameof(connectedUser)), out _);
-                    SendChannels.TryRemove(connectedUser, out _);
                     break;
                 }
 
-                var message = new Message(connectedUser, buffer, 0, bytesRead, ServerCertificate);
+                var message = new Message(MessageType.Content, buffer, 0, bytesRead);
                 lock (GlobalPriorityQueue)
                 {
                     GlobalPriorityQueue.Enqueue(message, 0);
@@ -271,66 +263,50 @@ internal class Program
     }
 
     /// <summary>
-    ///     Transmits messages via UDP based on the global priority queue
-    /// </summary>
-    private static async Task Transmit()
-    {
-        while (true)
-            try
-            {
-                Message message;
-                lock (GlobalPriorityQueue)
-                {
-                    if (GlobalPriorityQueue.Count > 0)
-                    {
-                        message = GlobalPriorityQueue.Dequeue();
-                    }
-                    else
-                    {
-                        Thread.Sleep(100); // Avoid busy-waiting
-                        continue;
-                    }
-                }
-
-                if (SendChannels.TryGetValue(
-                        message.User ?? throw new InvalidOperationException("Client id is null"),
-                        out var udpClient))
-                    if (udpClient != null)
-                        await udpClient.SendAsync(message.Data, message.Data.Length);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error in Transmit loop: {ex.Message}");
-            }
-    }
-
-    /// <summary>
     ///     Authenticates a client using a certificate and verifies user credentials
     /// </summary>
     /// <param name="stream">The client's network stream</param>
     /// <returns>The client ID if authentication succeeds, null otherwise</returns>
     private static async Task<ConnectedUser?> AuthenticateClient(SslStream stream)
     {
+        var serializerOptions = new JsonSerializerOptions()
+        {
+            WriteIndented = false
+        };
         try
         {
-            var authDataBuffer = new byte[2048];
+            var authDataBuffer = new byte[1024];
             var read = await stream.ReadAsync(authDataBuffer, 0, authDataBuffer.Length);
             Array.Resize(ref authDataBuffer, read);
             var memoryStream = new MemoryStream(authDataBuffer);
-            var connectedUser = await JsonSerializer.DeserializeAsync<ConnectedUser>(memoryStream,
-                new JsonSerializerOptions()
-                {
-                    PropertyNameCaseInsensitive = false
-                });
+            var deserializerOptions = new JsonSerializerOptions()
+            {
+                PropertyNameCaseInsensitive = false
+            };
+            var message = await JsonSerializer.DeserializeAsync<Message>(memoryStream,deserializerOptions);
+            if(message is null) throw new SerializationException("Could not deserialize authentication message");
+            memoryStream = new MemoryStream(message.Data);
+            var connectedUser = await JsonSerializer.DeserializeAsync<ConnectedUser>(memoryStream,deserializerOptions);
             if (connectedUser is null) throw new InvalidOperationException("Could not deserialize user");
             var isAuthenticated = await Auth(connectedUser);
-            if (isAuthenticated) return connectedUser;
+            if (isAuthenticated)
+            {
+                var okReponse = new Message(MessageType.Authentication, [0x1], 0, 2);
+                var okResponseStream = new MemoryStream();
+                await JsonSerializer.SerializeAsync<Message>(okResponseStream, okReponse, serializerOptions);
+                await stream.WriteAsync(okResponseStream.ToArray());
+                return connectedUser;
+            }
         }
         catch (Exception ex)
         {
             Console.WriteLine($"Error authenticating client: {ex.Message}");
         }
 
+        var unauthorizedResponse = new Message(MessageType.Authentication, [0x0], 0, 1);
+        var unauthorizedResponseStream = new MemoryStream();
+        await JsonSerializer.SerializeAsync<Message>(unauthorizedResponseStream, unauthorizedResponse, serializerOptions);
+        await stream.WriteAsync(unauthorizedResponseStream.ToArray());
         return null;
     }
 
@@ -448,32 +424,5 @@ internal class Program
                       throw new InvalidOperationException("Tcp port is missing");
 
         return ushort.TryParse(udpPort, out var port) ? port : DefaultTcpPort;
-    }
-}
-
-/// <summary>
-///     Represents a message with metadata for prioritization
-/// </summary>
-public class Message : IComparable<Message>
-{
-    public Message(ConnectedUser? user, byte[] data, int offset, int count, X509Certificate2? serverCertificate)
-    {
-        User = user;
-        Data = new byte[count];
-        var stream = new MemoryStream(data, offset, count);
-        stream.Write(Data, offset, count);
-    }
-
-    public ConnectedUser? User { get; }
-    public byte[] Data { get; }
-
-    /// <summary>
-    ///     Compares this message with another message based on ClientId
-    /// </summary>
-    /// <param name="other">The other message to compare</param>
-    /// <returns>An integer indicating the relative order of the messages</returns>
-    public int CompareTo(Message? other)
-    {
-        return other is null ? 1 : StringComparer.Ordinal.Compare(User.UserName, other.User.UserName);
     }
 }
