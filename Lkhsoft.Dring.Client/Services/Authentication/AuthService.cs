@@ -63,7 +63,7 @@ public class AuthService : IAuthService
             result = response.Data[0] switch
             {
                 0x1 => true,
-                _ => throw new InvalidCredentialException("Invalid credentials")
+                _ => false
             };
         }
         catch (Exception e)

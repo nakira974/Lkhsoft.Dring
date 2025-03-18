@@ -29,7 +29,7 @@ public class Message : IComparable<Message>
         MessageId =  Guid.NewGuid().ToString("X");
         Data = new byte[count];
         var stream = new MemoryStream(data, offset, count);
-        stream.Write(Data, offset, count);
+        stream.ReadExactly(Data, offset, count);
     }
     
     /// <summary>

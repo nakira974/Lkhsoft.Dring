@@ -20,8 +20,10 @@ public partial class App : Application
 
     protected override Window CreateWindow(IActivationState? activationState)
     {
+        var shellWindow = new Window(new AppShell());
+        var loginWindow = new Window(new LoginPage(_loginPageModel));
         return !_sessionService.IsAuthenticated
-            ? new Window(new LoginPage(_loginPageModel))
-            : new Window(new AppShell());
+            ? loginWindow
+            : shellWindow;
     }
 }

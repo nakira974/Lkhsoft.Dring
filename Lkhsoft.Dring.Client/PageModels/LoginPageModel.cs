@@ -39,9 +39,10 @@ public partial class LoginPageModel : ObservableObject
         // Appeler la méthode d'authentification avec SecureString
         try
         {
-            _sessionService.LogOn(UserName, securePassword);
-            var newWindow = new Window(new AppShell());
-            Application.Current?.OpenWindow(newWindow);
+            await _sessionService.LogOn(UserName, securePassword);
+            var shellWindow = new Window(new AppShell());
+            shellWindow.Destroying += OnAppQuitting;
+            Application.Current?.OpenWindow(shellWindow);
 
             // Fermer la Window actuelle (celle de la page de login)
             if (Application.Current?.Windows.Count > 0)
@@ -53,6 +54,22 @@ public partial class LoginPageModel : ObservableObject
         {
             AuthErrorMessage = ex.Message;
             IsErrorMessageVisible = true;
+        }
+    }
+    
+    /// <summary>
+    /// On app quitting handle
+    /// </summary>
+    private async void OnAppQuitting(object? sender, EventArgs e)
+    {
+        try
+        {
+            // Appeler le service de shutdown
+            await _sessionService.LogOff();
+        }
+        catch (Exception ex)
+        {
+            throw new InvalidOperationException($"Logoff failed: {ex.Message}");
         }
     }
 }

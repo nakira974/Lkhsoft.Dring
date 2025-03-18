@@ -37,12 +37,12 @@ public interface ISessionService
     /// </summary>
     /// <param name="username">Username of the user to be authenticated</param>
     /// <param name="password">Password of the user to be authenticated</param>
-    void LogOn(string username, SecureString password);
+    Task LogOn(string username, SecureString password);
 
     /// <summary>
     /// Logout the current user
     /// </summary>
-    void LogOff();
+    Task LogOff();
 
     /// <summary>
     /// Gets the SSL stream of the current session

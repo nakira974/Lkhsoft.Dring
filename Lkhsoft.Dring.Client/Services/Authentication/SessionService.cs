@@ -42,12 +42,11 @@ public class SessionService : ISessionService
     }
 
     /// <inheritdoc/>
-    public async void LogOn(string username, SecureString password)
+    public async Task LogOn(string username, SecureString password)
     {
         try
         {
-            if (!await _authService.LogOn(username, password)) throw new InvalidOperationException("Logon failed");
-            ;
+            if (!await _authService.LogOn(username, password)) throw new InvalidOperationException("Invalid credentials");
         }
         catch (Exception e)
         {
@@ -56,7 +55,7 @@ public class SessionService : ISessionService
     }
 
     /// <inheritdoc/>
-    public async void LogOff()
+    public async Task LogOff()
     {
         try
         {

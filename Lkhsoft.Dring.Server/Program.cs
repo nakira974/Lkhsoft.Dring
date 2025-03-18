@@ -291,7 +291,7 @@ internal class Program
             var isAuthenticated = await Auth(connectedUser);
             if (isAuthenticated)
             {
-                var okReponse = new Message(MessageType.Authentication, [0x1], 0, 2);
+                var okReponse = new Message(MessageType.Authentication, [0x1], 0, 1);
                 var okResponseStream = new MemoryStream();
                 await JsonSerializer.SerializeAsync<Message>(okResponseStream, okReponse, serializerOptions);
                 await stream.WriteAsync(okResponseStream.ToArray());
