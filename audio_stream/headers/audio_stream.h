@@ -6,10 +6,22 @@
 #include <setjmp.h>
 #include <stdbool.h>
 
-// Définitions pour la gestion des erreurs
+/* ######### ERROR HANDLING MACROS  #########*/
+
+/* Try instruction  */
 #define TRY do { if (setjmp(error_jmp_buf) == 0) {
+/* Catch instruction */
 #define CATCH } else {
+/* Finally instruction */
 #define FINALLY } } while (0);
+/* Throw instruction */
+#define THROW longjmp(error_jmp_buf, 1)
+
+/* ######### AUDIO STREAM DEFINITIONS #########*/
+
+/* Default buffer size */
+#define DEFAULT_BUFFER_SIZE 1024
+
 
 
 // Exported functions
@@ -21,6 +33,10 @@ extern "C" {
 
     /* Small structure to store audio process information */
     typedef struct {
+        /* Left phase of the signal */
+        float left_phase;
+        /* Right phase of the signal */
+        float right_phase;
         /* Audio stream */
         PaStream *stream;
         /* Sample rate */
@@ -57,6 +73,12 @@ extern "C" {
 
     /* Starts an audio recording */
     bool Audio_StartCapture(AudioContext *context, int hostApiContext, int sampleRate, int numChannels, int bufferCapacity);
+
+    /* Starts an audio playback */
+    bool Audio_StartPlay(AudioContext *context, int hostApiContext, int sampleRate, int numChannels, int bufferCapacity);
+
+    /* Writes data to the circular buffer to be fetched by the callback */
+    void Audio_AddData(AudioContext *context, const float *data, int dataSize);
 
     /* Get the audio data */
     int Audio_GetAudioData(AudioContext *context, float* buffer, int bufferSize);

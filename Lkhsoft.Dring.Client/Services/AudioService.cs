@@ -5,6 +5,7 @@ using System.Net.Sockets;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Security.Cryptography.X509Certificates;
+using Lkhsoft.Dring.Client.Services.Authentication;
 
 #endregion
 
@@ -15,6 +16,7 @@ namespace Lkhsoft.Dring.Client.Services;
 /// </summary>
 public class AudioService : IAudioService
 {
+    private readonly ISessionService _sessionService;
     /// <summary>
     /// Audio context from native library
     /// </summary>
@@ -26,25 +28,15 @@ public class AudioService : IAudioService
     private IAudioService.AudioDataCallback _audioDataCallback;
 
     /// <summary>
-    /// TCP client for audio streaming
-    /// </summary>
-    private TcpClient _tcpClient;
-
-    /// <summary>
     /// Network stream for audio streaming
     /// </summary>
-    private SslStream _sslStream;
+    private SslStream? _sslStream;
 
     /// <summary>
     /// Native library name
     /// </summary>
     private const string nativeLibraryName = "libaudio_stream";
-
-    /// <summary>
-    /// Default server port
-    /// </summary>
-    private const ushort defaultServerPort = 9091;
-
+    
     /// <summary>
     /// Selected audio device
     /// </summary>
@@ -55,13 +47,15 @@ public class AudioService : IAudioService
     /// </summary>
     /// <exception cref="Exception">The native library failed to initialize</exception>
     /// <exception cref="DllNotFoundException">Could not find audio_stream library the assembly</exception>
-    public AudioService()
+    public AudioService(ISessionService sessionService)
     {
+        _sessionService = sessionService;
+        _sslStream = sessionService.GetSslStream();
         LoadNativeLibrary();
         // malloc the audio context
         _audioContext = Marshal.AllocHGlobal(Marshal.SizeOf<AudioContext>());
         if (!Audio_Initialize()) throw new Exception("Failed to initialize audio library");
-        RegisterCallback(OnAudioDataReceived);
+        RegisterCallback(OnAudioDataEmitted);
     }
 
     /// <inheritdoc/>
@@ -69,6 +63,13 @@ public class AudioService : IAudioService
     {
         if (!Audio_StartCapture(_audioContext, hostApiIndex, sampleRate, numChannels, bufferCapacity))
             throw new Exception("Failed to start audio capture.");
+    }
+    
+    /// <inheritdoc/>
+    public void StartPlayBack(int hostApiIndex, int sampleRate, int numChannels, int bufferCapacity)
+    {
+        if (!Audio_StartPlay(_audioContext, hostApiIndex, sampleRate, numChannels, bufferCapacity))
+            throw new Exception("Failed to start audio playback.");
     }
 
     /// <inheritdoc/>
@@ -87,9 +88,14 @@ public class AudioService : IAudioService
         if (samplesRead == 0) throw new Exception("No audio data available.");
         return buffer;
     }
+    
+    /// <inheritdoc/>
+    public void SendDataToAudioEngine(IntPtr context, float[] audioData) {
+        Audio_AddData(context, audioData, audioData.Length);
+    }
 
     /// <inheritdoc/>
-    public void StopCapture()
+    public void StopEngine()
     {
         Audio_StopCapture(_audioContext);
     }
@@ -140,30 +146,10 @@ public class AudioService : IAudioService
     }
 
     /// <summary>
-    /// 
+    /// Sends recorded audio data to the network
     /// </summary>
-    /// <param name="data"></param>
-    /// <param name="size"></param>
-    private void OnAudioDataReceived(float[] data, int size)
+    private void OnAudioDataEmitted(float[] data, int size)
     {
-        if (_tcpClient is null || !_tcpClient.Connected)
-            try
-            {
-                // Se connecter au serveur TCP
-                _tcpClient = new TcpClient("127.0.0.1", 9091);
-
-                // Créer un SslStream à partir du NetworkStream
-                _sslStream = new SslStream(_tcpClient.GetStream(), false,
-                    new RemoteCertificateValidationCallback(ValidateServerCertificate));
-
-                _sslStream.AuthenticateAsClient("localhost");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine("Erreur de connexion SSL : " + ex.Message);
-                return;
-            }
-
         // Convertir les données audio en bytes
         var buffer = new byte[size * sizeof(float)];
         Buffer.BlockCopy(data, 0, buffer, 0, buffer.Length);
@@ -171,37 +157,13 @@ public class AudioService : IAudioService
         try
         {
             // Envoyer les données via SSL
-            _sslStream.Write(buffer, 0, buffer.Length);
+            _sslStream?.Write(buffer, 0, buffer.Length);
         }
         catch (Exception ex)
         {
             Console.WriteLine("Erreur d'envoi de données SSL : " + ex.Message);
         }
     }
-
-    /// <summary>
-    /// SSL server certificate validation
-    /// </summary>
-    private static bool ValidateServerCertificate(object sender, X509Certificate certificate, X509Chain chain,
-        SslPolicyErrors sslPolicyErrors)
-    {
-        // En mode DEBUG, accepter les certificats auto-signés
-#if DEBUG
-        if (sslPolicyErrors == SslPolicyErrors.None ||
-            sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors)
-            return true;
-#else
-    // En mode RELEASE, appliquer une validation stricte
-    if (sslPolicyErrors == SslPolicyErrors.None)
-    {
-        return true;
-    }
-#endif
-
-        Console.WriteLine("Erreur de certificat SSL : " + sslPolicyErrors);
-        return false;
-    }
-
     #endregion
 
     #region NATIVE METHODS
@@ -224,6 +186,19 @@ public class AudioService : IAudioService
     /// <returns>True if the capture has been correctly initialized, otherwise false</returns>
     [DllImport(nativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
     private static extern bool Audio_StartCapture(IntPtr context, int hostApiContext, int sampleRate, int numChannels,
+        int bufferCapacity);
+    
+    /// <summary>
+    /// Starts to play back the audio
+    /// </summary>
+    /// <param name="context">PortAudio context</param>
+    /// <param name="hostApiContext">Device index</param>
+    /// <param name="sampleRate">Capture sample rate</param>
+    /// <param name="numChannels">Number of channels</param>
+    /// <param name="bufferCapacity">Buffer capacity</param>
+    /// <returns>True if the capture has been correctly initialized, otherwise false</returns>
+    [DllImport(nativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
+    private static extern bool Audio_StartPlay(IntPtr context, int hostApiContext, int sampleRate, int numChannels,
         int bufferCapacity);
 
     /// <summary>
@@ -263,6 +238,15 @@ public class AudioService : IAudioService
     /// <returns>A pointer to the audio data</returns>
     [DllImport(nativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
     private static extern int Audio_GetAudioData(IntPtr context, float[] buffer, int bufferSize);
+    
+    /// <summary>
+    /// Sets the audio data from the audio stream
+    /// </summary>
+    /// <param name="context">Audio context</param>
+    /// <param name="buffer">Buffer to write the audio data</param>
+    /// <param name="bufferSize">Buffer size</param>
+    [DllImport(nativeLibraryName, CallingConvention = CallingConvention.Cdecl)]
+    public static extern void Audio_AddData(IntPtr context, float[] buffer, int bufferSize);
 
     /// <summary>
     /// Registers the audio data callback
@@ -327,6 +311,14 @@ public record struct Device
 public struct AudioContext
 {
     /// <summary>
+    /// Left phase of the signal
+    /// </summary>
+    public float LeftPhase;
+    /// <summary>
+    /// Right phase of the signal
+    /// </summary>
+    public float RightPhase;
+    /// <summary>
     /// Audio stream pointer (PaStream* in C)
     /// </summary>
     public IntPtr Stream;
@@ -349,44 +341,12 @@ public struct AudioContext
     /// <summary>
     /// Audio circular buffer (structure en C, pas un pointeur)
     /// </summary>
-    public CircularBuffer CircularBuffer;
+    public IntPtr CircularBuffer;
 
     /// <summary>
     /// Managed callback for audio stream (pointeur de fonction en C)
     /// </summary>
     public IntPtr ManagedCallback;
-}
-
-/// <summary>
-/// Structure to match CircularBuffer in the C library
-/// </summary>
-[StructLayout(LayoutKind.Sequential)]
-public struct CircularBuffer
-{
-    /// <summary>
-    /// Audio data buffer (float* en C)
-    /// </summary>
-    public IntPtr Buffer;
-
-    /// <summary>
-    /// Buffer capacity
-    /// </summary>
-    public int Capacity;
-
-    /// <summary>
-    /// Buffer's head
-    /// </summary>
-    public int Head;
-
-    /// <summary>
-    /// Buffer's tail
-    /// </summary>
-    public int Tail;
-
-    /// <summary>
-    /// Buffer size
-    /// </summary>
-    public int Size;
 }
 
 #endregion

@@ -18,11 +18,20 @@ public interface IAudioService : IDisposable
     /// <param name="numChannels">Channels to be used</param>
     /// <param name="bufferCapacity"> Buffer capacity</param>
     void StartCapture(int hostApiIndex, int sampleRate, int numChannels, int bufferCapacity);
+    
+    /// <summary>
+    /// Starts the playback of the audio data
+    /// </summary>
+    /// <param name="hostApiIndex">Index of the device to be used</param>
+    /// <param name="sampleRate">Sample rate of the capture</param>
+    /// <param name="numChannels">Channels to be used</param>
+    /// <param name="bufferCapacity">Buffer capacity</param>
+    void StartPlayBack(int hostApiIndex, int sampleRate, int numChannels, int bufferCapacity);
 
     /// <summary>
-    /// Stops capturing audio
+    /// Stops the audio engine
     /// </summary>
-    void StopCapture();
+    void StopEngine();
 
     /// <summary>
     /// Gets the audio data from the audio context
@@ -30,6 +39,17 @@ public interface IAudioService : IDisposable
     /// <returns></returns>
     float[] GetAudioData(int bufferSize);
 
+    /// <summary>
+    /// Writes the audio data to the audio context for playback
+    /// </summary>
+    /// <param name="context"></param>
+    /// <param name="audioData"></param>
+    void SendDataToAudioEngine(IntPtr context, float[] audioData);
+
+    /// <summary>
+    /// Registers the audio data record callback
+    /// </summary>
+    /// <param name="callback">Callback to be set</param>
     public void RegisterCallback(AudioDataCallback callback);
 
     /// <summary>

@@ -248,7 +248,7 @@ internal class Program
                     Clients.TryRemove(connectedUser ?? throw new ArgumentNullException(nameof(connectedUser)), out _);
                     break;
                 }
-
+                Array.Resize(ref buffer, bytesRead);
                 var message = new Message(MessageType.Content, buffer, 0, bytesRead);
                 lock (GlobalPriorityQueue)
                 {

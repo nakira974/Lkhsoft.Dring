@@ -40,14 +40,16 @@ public partial class LoginPageModel : ObservableObject
         try
         {
             await _sessionService.LogOn(UserName, securePassword);
-            var shellWindow = new Window(new AppShell());
-            shellWindow.Destroying += OnAppQuitting;
-            Application.Current?.OpenWindow(shellWindow);
+
+            var currentApp = Application.Current;
+
 
             // Fermer la Window actuelle (celle de la page de login)
-            if (Application.Current?.Windows.Count > 0)
+            if (currentApp is not null && currentApp.Windows.Count > 0)
             {
-                Application.Current.CloseWindow(Application.Current.Windows[0]);
+                var currentWindow = currentApp.Windows[0];
+                currentWindow.Destroying += OnAppQuitting;
+                currentWindow.Page = new AppShell();
             }
         }
         catch (Exception ex)

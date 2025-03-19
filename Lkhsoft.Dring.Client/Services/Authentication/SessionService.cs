@@ -60,7 +60,6 @@ public class SessionService : ISessionService
         try
         {
             if (!await _authService.LogOff()) throw new InvalidOperationException("Logoff failed");
-            ;
         }
         catch (Exception e)
         {

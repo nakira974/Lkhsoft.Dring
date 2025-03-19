@@ -93,7 +93,7 @@ public partial class AudioStreamPageModel : INotifyPropertyChanged
     private void StopStreaming()
     {
         // Arrêter la capture audio
-        _audioService.StopCapture();
+        _audioService.StopEngine();
 
         IsStreaming = false;
         StatusMessage = "Streaming stopped.";

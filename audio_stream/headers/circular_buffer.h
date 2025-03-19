@@ -10,7 +10,6 @@
 
 extern "C" {
 #endif
-
     /* Structure to store circular buffer information */
     typedef struct {
         /* Audio data buffer */
