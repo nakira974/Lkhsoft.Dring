@@ -9,7 +9,6 @@ using System.Security.Cryptography;
 using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
-using Lkhsoft.Dring.Client.Models;
 using Lkhsoft.Dring.Messages;
 
 #endregion
@@ -24,7 +23,7 @@ public class AuthService : IAuthService
     /// <summary>
     /// Tcp client for the connection
     /// </summary>
-    private readonly TcpClient _tcpClient = new();
+    private TcpClient _tcpClient { get; set; } = new();
 
     /// <inheritdoc/>
     public SslStream? SslStream { get; set; }
@@ -35,36 +34,57 @@ public class AuthService : IAuthService
         var iv = StringExtensions.GetDeterministicIv(username);
         var encryptedPassword = EncryptWithVersion(password, Encoding.UTF8.GetBytes(iv));
         bool result;
-        SslStream = null;
 
         var jsonSerializationOptions = new JsonSerializerOptions() {WriteIndented = false, DefaultBufferSize = 2048};
-        
+
         var appUser = new ConnectedUser {UserName = username, EncryptedPassword = encryptedPassword ?? string.Empty};
         var stream = new MemoryStream();
         await JsonSerializer.SerializeAsync<ConnectedUser>(stream, appUser, jsonSerializationOptions);
-        
+
         var authMessage = new Message(MessageType.Authentication, stream);
         stream = new MemoryStream();
-        await JsonSerializer.SerializeAsync<Message>(stream, authMessage,jsonSerializationOptions);
-        
+        await JsonSerializer.SerializeAsync<Message>(stream, authMessage, jsonSerializationOptions);
+
         try
         {
-            await _tcpClient.ConnectAsync("localhost", 9091);
-            SslStream = new SslStream(_tcpClient.GetStream(), true,
-                new RemoteCertificateValidationCallback(ValidateServerCertificate));
-            await SslStream.AuthenticateAsClientAsync("localhost");
-            await SslStream.WriteAsync(stream.ToArray());
-            var authData = new byte[1024];
-            var byteRead = await SslStream.ReadAsync(authData, 0, authData.Length);
-            Array.Resize(ref authData, byteRead);
-            var response = JsonSerializer.Deserialize<Message>(authData);
-            if (response is null || response.MessageType != MessageType.Authentication || response.Data is null || response.Data.Length == 0)
-                throw new AuthenticationException("Authentication failed: invalid response");
-            result = response.Data[0] switch
+            if (!_tcpClient.Connected)
             {
-                0x1 => true,
-                _ => false
-            };
+                await _tcpClient.ConnectAsync("localhost", 9091);
+                SslStream = new SslStream(_tcpClient.GetStream(), true,
+                    new RemoteCertificateValidationCallback(ValidateServerCertificate));
+                SslStream.ReadTimeout = 30000;
+                await SslStream.AuthenticateAsClientAsync("localhost");
+            }
+
+            if (SslStream is not null)
+            {
+                await SslStream.WriteAsync(stream.ToArray());
+                var authData = new byte[1024];
+                var byteRead = await SslStream.ReadAsync(authData, 0, authData.Length);
+                Array.Resize(ref authData, byteRead);
+                var response = JsonSerializer.Deserialize<Message>(authData);
+                if (response is null || response.MessageType != MessageType.Authentication || response.Data is null ||
+                    response.Data.Length == 0)
+                    throw new AuthenticationException("Authentication failed: invalid response");
+                result = false;
+                switch (response.Data[0])
+                {
+                    case 0x1: result = true; break;
+                    case 0x3:
+                    {
+                        _tcpClient.Close();
+                        _tcpClient = new TcpClient();
+                        throw new AuthenticationException("Authentication exceeded the maximum number of attempts");
+                    }
+                    default: result = false; break;
+                }
+
+                ;
+            }
+            else
+            {
+                throw new AuthenticationException("Authentication failed: SSL stream is null");
+            }
         }
         catch (Exception e)
         {
@@ -78,13 +98,7 @@ public class AuthService : IAuthService
     {
         throw new NotImplementedException();
     }
-
-    /// <inheritdoc/>
-    public Task<bool> LogOff(SslStream? sslStream)
-    {
-        throw new NotImplementedException();
-    }
-
+    
     #region PRIVATE METHODS
 
     /// <summary>

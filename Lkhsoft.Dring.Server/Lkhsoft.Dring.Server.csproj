@@ -13,7 +13,7 @@
         <Content Include="..\.dockerignore">
             <Link>.dockerignore</Link>
         </Content>
-        <Content Include="bin\Debug\net9.0\user.db" />
+        <Content Include="bin\Debug\net9.0\user.db"/>
     </ItemGroup>
 
     <ItemGroup>
@@ -41,11 +41,11 @@
         <EmbeddedResource Include="batch.config.yaml">
             <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
         </EmbeddedResource>
-        <None Include="bin\Debug\net9.0\users.db" />
+        <None Include="bin\Debug\net9.0\users.db"/>
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Lkhsoft.Dring.Messages\Lkhsoft.Dring.Messages.csproj" />
+        <ProjectReference Include="..\Lkhsoft.Dring.Messages\Lkhsoft.Dring.Messages.csproj"/>
     </ItemGroup>
 
 </Project>

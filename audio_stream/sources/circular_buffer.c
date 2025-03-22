@@ -6,7 +6,7 @@
 #include <stdlib.h>
 
 
-void CircularBuffer_Init(CircularBuffer* cb, int capacity) {
+void CircularBuffer_Init(CircularBuffer* cb, unsigned long capacity) {
     cb->buffer = (float*)malloc(capacity * sizeof(float));
     cb->capacity = capacity;
     cb->head = 0;
@@ -18,7 +18,7 @@ void CircularBuffer_Free(CircularBuffer* cb) {
     free(cb->buffer);
 }
 
-bool CircularBuffer_Write(CircularBuffer* cb, const float* data, int dataSize) {
+bool CircularBuffer_Write(CircularBuffer* cb, const float* data, unsigned long dataSize) {
     if (cb->size + dataSize > cb->capacity) {
         return false; // Buffer plein
     }
@@ -31,7 +31,7 @@ bool CircularBuffer_Write(CircularBuffer* cb, const float* data, int dataSize) {
     return true;
 }
 
-bool CircularBuffer_Read(CircularBuffer* cb, float* data, int dataSize) {
+bool CircularBuffer_Read(CircularBuffer* cb, float* data, unsigned long dataSize) {
     if (cb->size < dataSize) {
         return false; // Pas assez de données
     }

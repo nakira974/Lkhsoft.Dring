@@ -18,7 +18,7 @@ public partial class SipBackgroundService : BackgroundService
         context.StartForegroundService(intent);
 
         // Initialiser le ConnectivityManager
-        _connectivityManager = (ConnectivityManager)context.GetSystemService(Context.ConnectivityService);
+        _connectivityManager = (ConnectivityManager) context.GetSystemService(Context.ConnectivityService);
         _sipServer.Start();
     }
 

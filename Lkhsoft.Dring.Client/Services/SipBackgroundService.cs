@@ -1,17 +1,21 @@
+#region
+
 using Lkhsoft.Dring.Client.Services.SIP;
 using Microsoft.Extensions.Hosting;
+
+#endregion
 
 namespace Lkhsoft.Dring.Client.Services;
 
 public partial class SipBackgroundService : BackgroundService
 {
     private readonly SipServer _sipServer;
-    
+
     public SipBackgroundService(SipServer sipServer)
     {
         _sipServer = sipServer;
     }
-    
+
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         // Surveiller la connectivité réseau
@@ -38,13 +42,9 @@ public partial class SipBackgroundService : BackgroundService
     private void OnConnectivityChanged(object sender, ConnectivityChangedEventArgs e)
     {
         if (e.NetworkAccess == NetworkAccess.Internet)
-        {
             Console.WriteLine("Réseau disponible.");
-        }
         else
-        {
             Console.WriteLine("Réseau indisponible.");
-        }
     }
 
     private partial void PlatformStart();

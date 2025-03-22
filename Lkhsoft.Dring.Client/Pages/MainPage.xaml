@@ -41,9 +41,9 @@
                         <Label Text="Audio Devices" Style="{StaticResource Title2}" />
                         <Picker
                             Title="Select an audio device"
-                            ItemsSource="{Binding AudioDevices}"
+                            ItemsSource="{Binding InputAudioDevices}"
                             ItemDisplayBinding="{Binding Name}"
-                            SelectedItem="{Binding SelectedAudioDevice, Mode=TwoWay}"
+                            SelectedItem="{Binding SelectedInputAudioDevice, Mode=TwoWay}"
                             HorizontalOptions="FillAndExpand"
                             VerticalOptions="Center" />
 

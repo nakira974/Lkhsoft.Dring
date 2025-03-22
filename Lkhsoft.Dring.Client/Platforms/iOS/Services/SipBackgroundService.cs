@@ -1,4 +1,8 @@
+#region
+
 using UIKit;
+
+#endregion
 
 namespace Lkhsoft.Dring.Client.Services;
 
@@ -28,10 +32,8 @@ public partial class SipBackgroundService
         return Task.Run(() =>
         {
             while (!stoppingToken.IsCancellationRequested)
-            {
                 // Exécuter la logique du réseau P2P
                 Thread.Sleep(1000);
-            }
         }, stoppingToken);
     }
 }

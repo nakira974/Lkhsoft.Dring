@@ -53,8 +53,12 @@ extern "C" {
 
     /* Structure to store audio device information */
     typedef struct {
-        /* Index of the device */
+        /* Index of the API*/
         int hostApiIndex;
+        /* Index of the device in the host API */
+        int hostApiDeviceIndex;
+        /* Type of the host API */
+        PaHostApiTypeId hostApiType;
         /* Device information */
         char name[256];
         /* Maximum number of input channels */
@@ -72,10 +76,10 @@ extern "C" {
     bool Audio_Initialize();
 
     /* Starts an audio recording */
-    bool Audio_StartCapture(AudioContext *context, int hostApiContext, int sampleRate, int numChannels, int bufferCapacity);
+    bool Audio_StartCapture(AudioContext *context, int hostApiDeviceIndex, int sampleRate, int numChannels, int bufferCapacity);
 
     /* Starts an audio playback */
-    bool Audio_StartPlay(AudioContext *context, int hostApiContext, int sampleRate, int numChannels, int bufferCapacity);
+    bool Audio_StartPlay(AudioContext *context, int hostApiDeviceIndex, int sampleRate, int numChannels, int bufferCapacity);
 
     /* Writes data to the circular buffer to be fetched by the callback */
     void Audio_AddData(AudioContext *context, const float *data, int dataSize);

@@ -1,10 +1,16 @@
-﻿using Foundation;
+﻿#region
 
-namespace Lkhsoft.Dring.Client
+using Foundation;
+
+#endregion
+
+namespace Lkhsoft.Dring.Client;
+
+[Register("AppDelegate")]
+public class AppDelegate : MauiUIApplicationDelegate
 {
-    [Register("AppDelegate")]
-    public class AppDelegate : MauiUIApplicationDelegate
+    protected override MauiApp CreateMauiApp()
     {
-        protected override MauiApp CreateMauiApp() => MauiProgram.CreateMauiApp();
+        return MauiProgram.CreateMauiApp();
     }
 }

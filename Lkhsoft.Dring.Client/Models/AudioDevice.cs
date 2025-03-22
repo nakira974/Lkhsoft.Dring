@@ -20,10 +20,22 @@ public class AudioDevice
         IsInput = audioDevice.IsInput;
         IsOutput = audioDevice.IsOutput;
         HostApiIndex = audioDevice.HostApiIndex;
-        Device = audioDevice;
+        HostApiDeviceIndex = audioDevice.HostApiDeviceIndex;
+        HostApiType = audioDevice.HostApiType;
+        DefaultSampleRate = audioDevice.DefaultSampleRate;
+        MaxInputChannels = audioDevice.MaxInputChannels;
+        MaxOutputChannels = audioDevice.MaxOutputChannels;
     }
 
+    /// <summary>
+    /// Host API index
+    /// </summary>
     public int HostApiIndex { get; set; }
+
+    /// <summary>
+    /// Index of the device in host API
+    /// </summary>
+    public int HostApiDeviceIndex { get; set; }
 
     /// <summary>
     /// Audio device name
@@ -41,7 +53,22 @@ public class AudioDevice
     public bool IsOutput { get; set; }
 
     /// <summary>
-    /// Device
+    /// Device default sample rate
     /// </summary>
-    public Device Device { get; set; }
+    public double DefaultSampleRate { get; set; }
+
+    /// <summary>
+    /// Maximum output channels
+    /// </summary>
+    public int MaxInputChannels { get; set; }
+
+    /// <summary>
+    /// Maximum output channels
+    /// </summary>
+    public int MaxOutputChannels { get; set; }
+
+    /// <summary>
+    /// Audio API type
+    /// </summary>
+    public AudioApiType HostApiType { get; set; }
 }

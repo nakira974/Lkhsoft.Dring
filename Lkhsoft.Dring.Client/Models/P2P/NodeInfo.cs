@@ -9,14 +9,17 @@ public class NodeInfo
     /// Peer id
     /// </summary>
     public string Id { get; set; }
+
     /// <summary>
     /// Node address
     /// </summary>
     public string Address { get; set; }
+
     /// <summary>
     /// Node port
     /// </summary>
     public int Port { get; set; }
+
     /// <summary>
     /// Node metric
     /// </summary>

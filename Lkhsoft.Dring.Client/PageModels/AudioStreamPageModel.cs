@@ -13,18 +13,30 @@ namespace Lkhsoft.Dring.Client.PageModels;
 public partial class AudioStreamPageModel : INotifyPropertyChanged
 {
     private readonly IAudioService _audioService;
-    private AudioDevice _selectedAudioDevice;
+    private AudioDevice _selectedInputInputAudioDevice;
+    private AudioDevice _selectedOutputAudioDevice;
     private bool _isStreaming;
     private string _statusMessage;
 
-    public ObservableCollection<AudioDevice> AudioDevices { get; } = [];
+    public ObservableCollection<AudioDevice> InputAudioDevices { get; } = [];
+    public ObservableCollection<AudioDevice> OutputAudioDevices { get; } = [];
 
-    public AudioDevice SelectedAudioDevice
+    public AudioDevice SelectedInputAudioDevice
     {
-        get => _selectedAudioDevice;
+        get => _selectedInputInputAudioDevice;
         set
         {
-            _selectedAudioDevice = value;
+            _selectedInputInputAudioDevice = value;
+            OnPropertyChanged();
+        }
+    }
+
+    public AudioDevice SelectedOutputAudioDevice
+    {
+        get => _selectedOutputAudioDevice;
+        set
+        {
+            _selectedOutputAudioDevice = value;
             OnPropertyChanged();
         }
     }
@@ -61,7 +73,8 @@ public partial class AudioStreamPageModel : INotifyPropertyChanged
         _audioService = audioService;
 
         // Charger les périphériques audio
-        AudioDevices.Clear();
+        InputAudioDevices.Clear();
+        OutputAudioDevices.Clear();
         LoadAudioDevices();
 
         // Commandes
@@ -72,20 +85,24 @@ public partial class AudioStreamPageModel : INotifyPropertyChanged
     private void LoadAudioDevices()
     {
         var devices = _audioService.GetAudioDevices();
-        foreach (var device in devices.Where(x => x.IsInput)) AudioDevices.Add(new AudioDevice(device));
+        foreach (var device in devices.Where(x => x.IsInput)) InputAudioDevices.Add(new AudioDevice(device));
+        foreach (var device in devices.Where(x => !x.IsInput)) OutputAudioDevices.Add(new AudioDevice(device));
     }
 
     private void StartStreaming()
     {
-        if (SelectedAudioDevice is null)
+        if (SelectedInputAudioDevice is null)
         {
             StatusMessage = "Please select an audio device.";
             return;
         }
 
         // Démarrer la capture audio
-        _audioService.StartCapture(SelectedAudioDevice.HostApiIndex, 44100, 2, 1024); // 44.1 kHz, 2 canaux
-
+        _audioService.StartCapture(SelectedInputAudioDevice.HostApiDeviceIndex,
+            (int) SelectedInputAudioDevice.DefaultSampleRate, SelectedInputAudioDevice.MaxInputChannels,
+            1024); // 44.1 kHz, 2 canaux
+        _audioService.StartPlayBack(SelectedOutputAudioDevice.HostApiDeviceIndex,
+            (int) SelectedOutputAudioDevice.DefaultSampleRate, SelectedOutputAudioDevice.MaxOutputChannels, 1024);
         IsStreaming = true;
         StatusMessage = "Streaming started.";
     }

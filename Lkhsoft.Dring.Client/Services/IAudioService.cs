@@ -1,3 +1,9 @@
+#region
+
+using System.Runtime.InteropServices;
+
+#endregion
+
 namespace Lkhsoft.Dring.Client.Services;
 
 /// <summary>
@@ -8,25 +14,26 @@ public interface IAudioService : IDisposable
     /// <summary>
     /// Audio data callback delegate
     /// </summary>
-    public delegate void AudioDataCallback(float[] data, int size);
+    [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+    public delegate void AudioDataCallback(IntPtr data, int size);
 
     /// <summary>
     /// Starts capturing audio
     /// </summary>
-    /// <param name="hostApiIndex">Index of the device to be used</param>
+    /// <param name="hostApiDeviceIndex">Index of the device to be used</param>
     /// <param name="sampleRate">Sample rate of the capture</param>
     /// <param name="numChannels">Channels to be used</param>
     /// <param name="bufferCapacity"> Buffer capacity</param>
-    void StartCapture(int hostApiIndex, int sampleRate, int numChannels, int bufferCapacity);
-    
+    void StartCapture(int hostApiDeviceIndex, int sampleRate, int numChannels, int bufferCapacity);
+
     /// <summary>
     /// Starts the playback of the audio data
     /// </summary>
-    /// <param name="hostApiIndex">Index of the device to be used</param>
+    /// <param name="hostApiDeviceIndex">Index of the device to be used</param>
     /// <param name="sampleRate">Sample rate of the capture</param>
     /// <param name="numChannels">Channels to be used</param>
     /// <param name="bufferCapacity">Buffer capacity</param>
-    void StartPlayBack(int hostApiIndex, int sampleRate, int numChannels, int bufferCapacity);
+    void StartPlayBack(int hostApiDeviceIndex, int sampleRate, int numChannels, int bufferCapacity);
 
     /// <summary>
     /// Stops the audio engine
@@ -44,7 +51,7 @@ public interface IAudioService : IDisposable
     /// </summary>
     /// <param name="context"></param>
     /// <param name="audioData"></param>
-    void SendDataToAudioEngine(IntPtr context, float[] audioData);
+    void SendDataToAudioEngine(float[] audioData);
 
     /// <summary>
     /// Registers the audio data record callback

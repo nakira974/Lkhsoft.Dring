@@ -46,7 +46,8 @@ public class SessionService : ISessionService
     {
         try
         {
-            if (!await _authService.LogOn(username, password)) throw new InvalidOperationException("Invalid credentials");
+            if (!await _authService.LogOn(username, password))
+                throw new InvalidOperationException("Invalid credentials");
         }
         catch (Exception e)
         {

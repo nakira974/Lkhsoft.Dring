@@ -1,34 +1,45 @@
 <?xml version="1.0" encoding="utf-8"?>
 
-<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
-             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
-             xmlns:pageModels="clr-namespace:Lkhsoft.Dring.Client.PageModels"
-             x:Class="Lkhsoft.Dring.Client.Pages.AudioStreamTest"
-             x:DataType="pageModels:AudioStreamPageModel"
-             Title="Audio Stream Test">
+<ContentPage
+    x:Class="Lkhsoft.Dring.Client.Pages.AudioStreamTest"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pageModels="clr-namespace:Lkhsoft.Dring.Client.PageModels"
+    Title="Audio Stream Test"
+    x:DataType="pageModels:AudioStreamPageModel">
 
     <ContentPage.Content>
         <VerticalStackLayout Padding="20" Spacing="10">
-            <!-- Sélection du périphérique audio -->
-            <Label Text="Select Audio Device:" />
-            <Picker ItemsSource="{Binding AudioDevices}"
-                    ItemDisplayBinding="{Binding Name}"
-                    SelectedItem="{Binding SelectedAudioDevice, Mode=TwoWay}" />
+            <!--  Sélection du périphérique audio  -->
+            <Label Text="Select Input Audio Device:" />
+            <Picker
+                ItemDisplayBinding="{Binding Name}"
+                ItemsSource="{Binding InputAudioDevices}"
+                SelectedItem="{Binding SelectedInputAudioDevice, Mode=TwoWay}" />
 
-            <!-- Bouton pour démarrer l'envoi des données -->
-            <Button Text="Start Streaming"
-                    Command="{Binding StartStreamingCommand}"
-                    IsEnabled="{Binding IsNotStreaming}" />
+            <Label Text="Select Output Audio Device:" />
+            <Picker
+                ItemDisplayBinding="{Binding Name}"
+                ItemsSource="{Binding OutputAudioDevices}"
+                SelectedItem="{Binding SelectedOutputAudioDevice, Mode=TwoWay}" />
 
-            <!-- Bouton pour arrêter l'envoi des données -->
-            <Button Text="Stop Streaming"
-                    Command="{Binding StopStreamingCommand}"
-                    IsEnabled="{Binding IsStreaming}" />
+            <!--  Bouton pour démarrer l'envoi des données  -->
+            <Button
+                Command="{Binding StartStreamingCommand}"
+                IsEnabled="{Binding IsNotStreaming}"
+                Text="Start Streaming" />
 
-            <!-- Indicateur de statut -->
-            <Label Text="{Binding StatusMessage}"
-                   VerticalOptions="Center"
-                   HorizontalOptions="Center" />
+            <!--  Bouton pour arrêter l'envoi des données  -->
+            <Button
+                Command="{Binding StopStreamingCommand}"
+                IsEnabled="{Binding IsStreaming}"
+                Text="Stop Streaming" />
+
+            <!--  Indicateur de statut  -->
+            <Label
+                HorizontalOptions="Center"
+                Text="{Binding StatusMessage}"
+                VerticalOptions="Center" />
         </VerticalStackLayout>
     </ContentPage.Content>
 </ContentPage>

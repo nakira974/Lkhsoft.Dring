@@ -1,5 +1,8 @@
-﻿using System.Security.Cryptography.X509Certificates;
+﻿#region
+
 using System.Text.Json.Serialization;
+
+#endregion
 
 namespace Lkhsoft.Dring.Messages;
 
@@ -13,9 +16,8 @@ public class Message : IComparable<Message>
     /// </summary>
     public Message()
     {
-        
     }
-    
+
     /// <summary>
     /// Default constructor
     /// </summary>
@@ -26,12 +28,12 @@ public class Message : IComparable<Message>
     public Message(MessageType type, byte[] data, int offset, int count)
     {
         MessageType = type;
-        MessageId =  Guid.NewGuid().ToString("X");
+        MessageId = Guid.NewGuid().ToString("X");
         Data = new byte[count];
         var stream = new MemoryStream(data, offset, count);
         stream.ReadExactly(Data, offset, count);
     }
-    
+
     /// <summary>
     /// Default constructor
     /// </summary>
@@ -45,12 +47,12 @@ public class Message : IComparable<Message>
 
         MessageType = type;
         MessageId = Guid.NewGuid().ToString("X");
-        
+
         Data = new byte[data.Length];
         data.Position = 0;
         data.ReadExactly(Data, offset, Data.Length);
     }
-    
+
     /// <summary>
     /// Message type
     /// </summary>
@@ -62,7 +64,7 @@ public class Message : IComparable<Message>
     /// </summary>
     [JsonPropertyName("messageId")]
     public string? MessageId { get; init; }
-    
+
     /// <summary>
     /// Message data
     /// </summary>

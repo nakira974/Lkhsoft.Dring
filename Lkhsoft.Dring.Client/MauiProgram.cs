@@ -60,6 +60,7 @@ public static class MauiProgram
         builder.Services.AddSingleton<SipServer>();
 
         builder.Services.AddHostedService<SipBackgroundService>();
+
         #endregion
 
 

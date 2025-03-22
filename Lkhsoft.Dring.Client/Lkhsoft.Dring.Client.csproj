@@ -68,7 +68,7 @@
     </ItemGroup>
 
     <ItemGroup>
-        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.3" />
+        <PackageReference Include="Microsoft.Extensions.Hosting" Version="9.0.3"/>
         <PackageReference Include="Microsoft.Maui.Controls" Version="9.0.50"/>
         <PackageReference Include="Microsoft.Extensions.Logging.Debug" Version="9.0.3"/>
     </ItemGroup>
@@ -77,8 +77,8 @@
         <PackageReference Include="CommunityToolkit.Mvvm" Version="8.3.2"/>
         <PackageReference Include="CommunityToolkit.Maui" Version="9.1.0"/>
         <PackageReference Include="Microsoft.Data.Sqlite.Core" Version="10.0.0-preview.1.25081.1"/>
-        <PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.50" />
-        <PackageReference Include="SIPSorcery" Version="8.0.11" />
+        <PackageReference Include="Microsoft.Maui.Essentials" Version="9.0.50"/>
+        <PackageReference Include="SIPSorcery" Version="8.0.11"/>
         <PackageReference Include="SQLitePCLRaw.bundle_green" Version="2.1.11"/>
         <PackageReference Include="Syncfusion.Maui.Toolkit" Version="1.0.4"/>
     </ItemGroup>
@@ -88,7 +88,7 @@
     </ItemGroup>
 
     <ItemGroup>
-      <ProjectReference Include="..\Lkhsoft.Dring.Messages\Lkhsoft.Dring.Messages.csproj" />
+        <ProjectReference Include="..\Lkhsoft.Dring.Messages\Lkhsoft.Dring.Messages.csproj"/>
     </ItemGroup>
 
 </Project>

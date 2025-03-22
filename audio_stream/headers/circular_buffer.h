@@ -15,26 +15,26 @@ extern "C" {
         /* Audio data buffer */
         float* buffer;
         /* Buffer capacity */
-        int capacity;
+        unsigned long capacity;
         /* Buffer's head */
-        int head;
+        unsigned long head;
         /* Buffer's tail */
-        int tail;
+        unsigned long tail;
         /* Buffer size */
-        int size;
+        unsigned long size;
     } CircularBuffer;
 
     /* Initialize a circular buffer */
-    void CircularBuffer_Init(CircularBuffer* cb, int capacity);
+    void CircularBuffer_Init(CircularBuffer* cb, unsigned long capacity);
 
     /* Frees the resources used by the circular buffer */
     void CircularBuffer_Free(CircularBuffer* cb);
 
     /* Writes data from the circular buffer */
-    bool CircularBuffer_Write(CircularBuffer* cb, const float* data, int dataSize);
+    bool CircularBuffer_Write(CircularBuffer* cb, const float* data, unsigned long dataSize);
 
     /* Reads data from the circular buffer */
-    bool CircularBuffer_Read(CircularBuffer* cb, float* data, int dataSize);
+    bool CircularBuffer_Read(CircularBuffer* cb, float* data, unsigned long dataSize);
 
 #ifdef __cplusplus
 }

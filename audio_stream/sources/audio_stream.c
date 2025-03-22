@@ -13,14 +13,19 @@ static int recordAudioCallback(const void *inputBuffer, void *outputBuffer,
                         const PaStreamCallbackFlags statusFlags,
                         void *userData) {
     AudioContext *context = (AudioContext *)userData;
+    const float *in = (const float *)inputBuffer;
     if (!context->isRunning) return paComplete;
     (void) outputBuffer;
     (void)timeInfo;
     (void)statusFlags;
 
     // Écrire les données audio dans le buffer circulaire
-    if (inputBuffer) {
-        CircularBuffer_Write(&context->circularBuffer, (const float*)inputBuffer, framesPerBuffer * context->numChannels);
+    if (inputBuffer != NULL) {
+        CircularBuffer_Write(&context->circularBuffer, in, framesPerBuffer * context->numChannels);
+    }else {
+        const float* silence = (float*)calloc(framesPerBuffer * context->numChannels, sizeof(float));
+        CircularBuffer_Write(&context->circularBuffer, silence, framesPerBuffer * context->numChannels);
+        free((float*)silence);
     }
 
     // Si un callback managé est enregistré, l'appeler avec les données disponibles
@@ -28,7 +33,7 @@ static int recordAudioCallback(const void *inputBuffer, void *outputBuffer,
         float buffer[DEFAULT_BUFFER_SIZE]; // Buffer temporaire pour les données audio
         int samplesRead = CircularBuffer_Read(&context->circularBuffer, buffer, DEFAULT_BUFFER_SIZE);
         if (samplesRead > 0) {
-            context->managedCallback(buffer, samplesRead);
+            context->managedCallback(buffer, DEFAULT_BUFFER_SIZE);
         }
     }
 
@@ -107,9 +112,9 @@ bool Audio_Initialize() {
 }
 
 
-bool Audio_StartCapture(AudioContext *context, int hostApiContext, int sampleRate, int numChannels, int bufferCapacity) {
+bool Audio_StartCapture(AudioContext *context, int hostApiDeviceIndex, int sampleRate, int numChannels, int bufferCapacity) {
     TRY {
-        const PaDeviceInfo* device_info = Pa_GetDeviceInfo(hostApiContext);
+        const PaDeviceInfo* device_info = Pa_GetDeviceInfo(hostApiDeviceIndex);
         context->left_phase = 0.0f;
         context->right_phase = 0.0f;
         context->sampleRate = sampleRate;
@@ -117,23 +122,22 @@ bool Audio_StartCapture(AudioContext *context, int hostApiContext, int sampleRat
         context->isRunning = true;
 
         // Initialiser le buffer circulaire
-        CircularBuffer_Init(&context->circularBuffer, bufferCapacity);
+        CircularBuffer_Init(&context->circularBuffer, bufferCapacity * numChannels);
 
         // Ouvrir un flux audio avec le périphérique spécifié
         PaStreamParameters inputParameters;
-        inputParameters.device = device_info->hostApi;
+        inputParameters.device = hostApiDeviceIndex;
         inputParameters.channelCount = numChannels;
         inputParameters.sampleFormat = paFloat32;
         inputParameters.suggestedLatency = device_info->defaultLowInputLatency;
         inputParameters.hostApiSpecificStreamInfo = NULL;
-        inputParameters.suggestedLatency = device_info->defaultLowOutputLatency;
 
         PaError err = Pa_OpenStream(
             &context->stream,
             &inputParameters,
             NULL,
             sampleRate,
-            DEFAULT_BUFFER_SIZE,
+            bufferCapacity,
             paClipOff,
             recordAudioCallback,
             context);
@@ -157,20 +161,20 @@ bool Audio_StartCapture(AudioContext *context, int hostApiContext, int sampleRat
     FINALLY;
 }
 
-bool Audio_StartPlay(AudioContext *context, int hostApiContext, int sampleRate, int numChannels, int bufferCapacity) {
+bool Audio_StartPlay(AudioContext *context, int hostApiDeviceIndex, int sampleRate, int numChannels, int bufferCapacity) {
     TRY {
         // Initialiser les phases du signal en dents de scie
-        const PaDeviceInfo* device_info = Pa_GetDeviceInfo(hostApiContext);
+        const PaDeviceInfo* device_info = Pa_GetDeviceInfo(hostApiDeviceIndex);
         context->left_phase = 0.0f;
         context->right_phase = 0.0f;
         context->numChannels = numChannels;
         context->isRunning = true;
 
-        CircularBuffer_Init(&context->circularBuffer, bufferCapacity);
+        CircularBuffer_Init(&context->circularBuffer, bufferCapacity * numChannels);
 
         // Configurer les paramètres de sortie
         PaStreamParameters outputParameters;
-        outputParameters.device = device_info->hostApi;
+        outputParameters.device = hostApiDeviceIndex;
         outputParameters.channelCount = numChannels;
         outputParameters.sampleFormat = paFloat32;
         outputParameters.suggestedLatency =device_info->defaultLowOutputLatency;
@@ -182,7 +186,7 @@ bool Audio_StartPlay(AudioContext *context, int hostApiContext, int sampleRate, 
             NULL,
             &outputParameters,
             sampleRate,
-            DEFAULT_BUFFER_SIZE,
+            bufferCapacity,
             paClipOff,
             playAudioCallback,
             context
@@ -260,28 +264,49 @@ Device* GetAudioDevices(int* deviceCount) {
             THROW;
         }
 
-        Device* devices = (Device*)malloc(numDevices * sizeof(Device));
-        if (!devices) {
+        Device* allDevices = (Device*)malloc(numDevices * sizeof(Device));
+        if (!allDevices) {
             fprintf(stderr, "Memory allocation failed\n");
             THROW;
         }
 
         // Remplir le tableau avec les informations des périphériques
+        int validDeviceCount = 0;
         for (int i = 0; i < numDevices; i++) {
             const PaDeviceInfo* deviceInfo = Pa_GetDeviceInfo(i);
             if (deviceInfo) {
-                strncpy(devices[i].name, deviceInfo->name, sizeof(devices[i].name) - 1);
-                devices[i].name[sizeof(devices[i].name) - 1] = '\0'; // Assurer la terminaison de la chaîne
-                devices[i].hostApiIndex = deviceInfo->hostApi;
-                devices[i].maxInputChannels = deviceInfo->maxInputChannels;
-                devices[i].maxOutputChannels = deviceInfo->maxOutputChannels;
-                devices[i].defaultSampleRate = deviceInfo->defaultSampleRate;
+                const PaHostApiInfo* hostApiInfo = Pa_GetHostApiInfo(deviceInfo->hostApi);
+                if (hostApiInfo &&
+                    (hostApiInfo->type == paWASAPI || hostApiInfo->type == paCoreAudio || hostApiInfo->type == paALSA) && // Filtrer par Host API
+                    (deviceInfo->maxInputChannels > 0 || deviceInfo->maxOutputChannels > 0) && // Au moins un canal d'entrée ou de sortie
+                    (deviceInfo->defaultSampleRate >= 44100.0))
+                    {
+                        strncpy(allDevices[validDeviceCount].name, deviceInfo->name, sizeof(allDevices[validDeviceCount].name) - 1);
+                        allDevices[validDeviceCount].hostApiDeviceIndex =  i;
+                        allDevices[validDeviceCount].hostApiType = hostApiInfo->type;
+                        allDevices[validDeviceCount].name[sizeof(allDevices[validDeviceCount].name) - 1] = '\0'; // Assurer la terminaison de la chaîne
+                        allDevices[validDeviceCount].hostApiIndex = deviceInfo->hostApi;
+                        allDevices[validDeviceCount].maxInputChannels = deviceInfo->maxInputChannels;
+                        allDevices[validDeviceCount].maxOutputChannels = deviceInfo->maxOutputChannels;
+                        allDevices[validDeviceCount].defaultSampleRate = deviceInfo->defaultSampleRate;
+                        validDeviceCount++;
+                    }
             }
         }
 
+        Device* validDevices = (Device*)malloc(validDeviceCount * sizeof(Device));
+        if (!validDevices) {
+            fprintf(stderr, "Memory allocation failed\n");
+            free(allDevices);
+            THROW;
+        }
+
+        // Copier les périphériques valides dans le nouveau tableau
+        memcpy(validDevices, allDevices, validDeviceCount * sizeof(Device));
+        free(allDevices);
         // Retourner le tableau et le nombre de périphériques
-        *deviceCount = numDevices;
-        return devices;
+        *deviceCount = validDeviceCount;
+        return validDevices;
     }
     CATCH {
         // En cas d'erreur, retourner NULL

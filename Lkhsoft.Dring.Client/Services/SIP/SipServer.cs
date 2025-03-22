@@ -1,6 +1,10 @@
+#region
+
 using System.Net;
 using Lkhsoft.Dring.Client.Models.P2P;
 using SIPSorcery.SIP;
+
+#endregion
 
 namespace Lkhsoft.Dring.Client.Services.SIP;
 
@@ -12,7 +16,8 @@ public class SipServer
     {
         // Configuration du transport SIP
         _sipTransport = new SIPTransport();
-        _sipTransport.AddSIPChannel(new SIPUDPChannel(new IPEndPoint(IPAddress.Any, 5060))); // Écoute sur le port 5060 (UDP)
+        _sipTransport.AddSIPChannel(
+            new SIPUDPChannel(new IPEndPoint(IPAddress.Any, 5060))); // Écoute sur le port 5060 (UDP)
     }
 
     public void Start()
@@ -28,7 +33,8 @@ public class SipServer
         Console.WriteLine("Serveur SIP arrêté.");
     }
 
-    private async Task OnSipRequestReceived(SIPEndPoint localSipEndPoint, SIPEndPoint remoteEndPoint, SIPRequest sipRequest)
+    private async Task OnSipRequestReceived(SIPEndPoint localSipEndPoint, SIPEndPoint remoteEndPoint,
+        SIPRequest sipRequest)
     {
         Console.WriteLine($"Requête SIP reçue : {sipRequest.Method} de {remoteEndPoint}");
 
@@ -66,7 +72,7 @@ public class SipServer
             Console.WriteLine("Destination trouvée, établissement de l'appel...");
             EstablishCall(inviteRequest, remoteEndPoint);
         }
-        
+
         return Task.CompletedTask;
     }
 
@@ -91,7 +97,8 @@ public class SipServer
     private void EstablishCall(SIPRequest inviteRequest, SIPEndPoint remoteEndPoint)
     {
         // Accepter l'appel et établir la communication
-        var okResponse = new SIPResponse(SIPResponseStatusCodesEnum.Ok, "OK", inviteRequest.SIPEncoding, inviteRequest.SIPEncoding);
+        var okResponse = new SIPResponse(SIPResponseStatusCodesEnum.Ok, "OK", inviteRequest.SIPEncoding,
+            inviteRequest.SIPEncoding);
         _sipTransport.SendResponseAsync(remoteEndPoint, okResponse);
 
         Console.WriteLine("Appel établi avec succès.");

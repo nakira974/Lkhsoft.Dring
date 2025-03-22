@@ -13,7 +13,7 @@ public partial class SipBackgroundService : BackgroundService
     {
         _sipServer.Stop();
     }
-    
+
     private partial Task PlatformExecuteAsync(CancellationToken stoppingToken) // Ajout du modificateur d'accès
     {
         return Task.Run(() =>

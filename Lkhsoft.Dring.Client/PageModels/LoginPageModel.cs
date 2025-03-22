@@ -58,7 +58,7 @@ public partial class LoginPageModel : ObservableObject
             IsErrorMessageVisible = true;
         }
     }
-    
+
     /// <summary>
     /// On app quitting handle
     /// </summary>
