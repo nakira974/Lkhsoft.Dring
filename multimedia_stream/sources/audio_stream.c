@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 /* Buffer for error handling */
 jmp_buf error_jmp_buf;
 

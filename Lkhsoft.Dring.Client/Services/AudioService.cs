@@ -39,7 +39,7 @@ public class AudioService : IAudioService
     /// <summary>
     /// Native library name
     /// </summary>
-    private const string nativeLibraryName = "libaudio_stream";
+    private const string nativeLibraryName = "libmultimedia_stream";
 
     /// <summary>
     /// Selected audio device

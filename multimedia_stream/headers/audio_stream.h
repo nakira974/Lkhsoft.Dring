@@ -2,20 +2,9 @@
 #define AUDIO_STREAM_LIBRARY_H
 
 #include "circular_buffer.h"
+#include "utils/exception.h"
 #include <portaudio.h>
-#include <setjmp.h>
 #include <stdbool.h>
-
-/* ######### ERROR HANDLING MACROS  #########*/
-
-/* Try instruction  */
-#define TRY do { if (setjmp(error_jmp_buf) == 0) {
-/* Catch instruction */
-#define CATCH } else {
-/* Finally instruction */
-#define FINALLY } } while (0);
-/* Throw instruction */
-#define THROW longjmp(error_jmp_buf, 1)
 
 /* ######### AUDIO STREAM DEFINITIONS #########*/
 

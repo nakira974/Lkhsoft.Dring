@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.15)
-project(audio_stream C)
+project(multimedia_stream C)
 
 set(CMAKE_C_STANDARD 99)
 
@@ -8,7 +8,7 @@ if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(LKHSOFT_DRING_CLIENT_ANDROID_BUILD_OUTPUT ${CMAKE_SOURCE_DIR}/..//Lkhsoft.Dring.Client/bin/Debug/net9.0-android)
     set(LKHSOFT_DRING_CLIENT_IOS_BUILD_OUTPUT ${CMAKE_SOURCE_DIR}/../Lkhsoft.Dring.Client/bin/Debug/net9.0-ios/iossimulator-x64)
     set(LKHSOFT_DRING_CLIENT_MACOS_BUILD_OUTPUT ${CMAKE_SOURCE_DIR}/../Lkhsoft.Dring.Client/bin/Debug/net9.0-maccatalyst/maccatalyst-x64)
-    add_compile_options(-g -ggdb)
+    add_compile_options(-g)
 else ()
     set(LKHSOFT_DRING_CLIENT_WINDOWS_BUILD_OUTPUT ${CMAKE_SOURCE_DIR}/../Lkhsoft.Dring.Client/bin/Release/net9.0-windows10.0.19041.0)
     set(LKHSOFT_DRING_CLIENT_ANDROID_BUILD_OUTPUT ${CMAKE_SOURCE_DIR}/../Lkhsoft.Dring.Client/bin/Release/net9.0-android)
@@ -25,8 +25,16 @@ FetchContent_Declare(
         GIT_TAG 35e35d4 # Specific commit
 )
 
+FetchContent_Declare(
+        opencv
+        GIT_REPOSITORY https://github.com/opencv/opencv.git
+        GIT_TAG 4.11.0
+)
+
 # Fetch and make PortAudio available
 FetchContent_MakeAvailable(portaudio)
+# Fetch and make OpenCV available
+FetchContent_MakeAvailable(opencv)
 
 ## OUTPUT LIBRARY CONFIGURATION PER COMPILER ###
 
@@ -76,14 +84,20 @@ endif ()
 # Inclure les répertoires d'en-têtes
 include_directories(${PROJECT_SOURCE_DIR}/headers)
 
-
 # Créer la bibliothèque
 add_library(${CMAKE_PROJECT_NAME} SHARED ${SOURCES_FILES} ${HEADERS_FILES})
 
 # Lier portaudio
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE portaudio)
-target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE ${portaudio_SOURCE_DIR}/include)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE portaudio opencv_core opencv_highgui opencv_videoio opencv_imgproc)
 
+target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
+        ${portaudio_SOURCE_DIR}/include
+        ${OPENCV_CONFIG_FILE_INCLUDE_DIR}
+        ${OPENCV_MODULE_opencv_core_LOCATION}/include
+        ${OPENCV_MODULE_opencv_highgui_LOCATION}/include
+        ${OPENCV_MODULE_opencv_videoio_LOCATION}/include
+        ${OPENCV_MODULE_opencv_imgproc_LOCATION}/include
+)
 
 # Définir le répertoire de sortie pour PortAudio
 set_target_properties(portaudio PROPERTIES
@@ -108,6 +122,8 @@ message(STATUS "################# BUILD CONFIGURATION #################")
 message(STATUS "Build type: ${CMAKE_BUILD_TYPE}")
 message(STATUS "portaudio_SOURCE_DIR: ${portaudio_SOURCE_DIR}")
 message(STATUS "portaudio_BINARY_DIR: ${portaudio_BINARY_DIR}")
+message(STATUS "opencv_SOURCE_DIR: ${opencv_SOURCE_DIR}")
+message(STATUS "opencv_BINARY_DIR: ${opencv_BINARY_DIR}")
 message(STATUS "Output directories:")
 message(STATUS "RUNTIME: ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}")
 message(STATUS "ARCHIVE: ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}")
