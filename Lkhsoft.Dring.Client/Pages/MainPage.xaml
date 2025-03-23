@@ -39,13 +39,6 @@
                                          Padding="{StaticResource LayoutPadding}">
                         <!-- Picker pour les périphériques audio -->
                         <Label Text="Audio Devices" Style="{StaticResource Title2}" />
-                        <Picker
-                            Title="Select an audio device"
-                            ItemsSource="{Binding InputAudioDevices}"
-                            ItemDisplayBinding="{Binding Name}"
-                            SelectedItem="{Binding SelectedInputAudioDevice, Mode=TwoWay}"
-                            HorizontalOptions="FillAndExpand"
-                            VerticalOptions="Center" />
 
                         <controls:CategoryChart />
                         <Label Text="Projects" Style="{StaticResource Title2}" />

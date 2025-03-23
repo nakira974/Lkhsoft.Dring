@@ -8,6 +8,9 @@
 
 /* ######### ERROR HANDLING MACROS  #########*/
 
+/* Global variable to handle errors */
+extern jmp_buf error_jmp_buf;
+
 /* Try instruction  */
 #define TRY do { if (setjmp(error_jmp_buf) == 0) {
 /* Catch instruction */

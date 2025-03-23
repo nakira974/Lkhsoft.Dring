@@ -2,6 +2,7 @@
 
 using CommunityToolkit.Maui;
 using Lkhsoft.Dring.Client.Services.Authentication;
+using Lkhsoft.Dring.Client.Services.Multimedia;
 using Lkhsoft.Dring.Client.Services.SIP;
 using Microsoft.Extensions.Logging;
 using Syncfusion.Maui.Toolkit.Hosting;
@@ -54,7 +55,10 @@ public static class MauiProgram
         builder.Services.AddSingleton<SeedDataService>();
         builder.Services.AddSingleton<ModalErrorHandler>();
 
-        builder.Services.AddSingleton<IAudioService, AudioService>();
+        builder.Services.AddSingleton<INativeLibrariesImports, NativeLibrariesImports>();
+        builder.Services.AddScoped<IAudioService, AudioService>();
+        builder.Services.AddScoped<IVideoService, VideoService>();
+        
         builder.Services.AddSingleton<ISessionService, SessionService>();
         builder.Services.AddSingleton<IAuthService, AuthService>();
         builder.Services.AddSingleton<SipServer>();

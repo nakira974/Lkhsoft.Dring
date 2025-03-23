@@ -2,31 +2,31 @@
 // Created by maxim on 22/03/2025.
 //
 
-#ifndef VIDEO_STREAM_H
-#define VIDEO_STREAM_H
-#include "utils/exception.h"
+#ifndef VIDEO_STREAM_HPP
+#define VIDEO_STREAM_HPP
+#include <string>
 
-#ifdef __cplusplus
-extern "C" {
-#endif
-    /* Video device structure */
-    typedef struct {
-        /* Index of the device */
+extern "C"{
+    /* Structure to store video device information */
+    struct VideoDevice {
+        /* Device index */
         int index;
         /* Device name */
-        char name[256];
-    } VideoDevice;
+        std::string name;
+    };
 
-    /* Capture a frame from a video device */
+    /* Captures a frame from a video device */
     unsigned char* CaptureFrame(int deviceIndex, int* width, int* height, int* channels);
 
-    /* Free the frame buffer */
+    /* Frees the memory allocated for a frame */
     void FreeFrame(unsigned char* frame);
 
-    /* Get the list of available video devices */
-    VideoDevice* GetVideoDevices(int* deviceCount);
+    /* Lists all available video devices */
+    VideoDevice* GetVideoDevices(int * deviceCount);
 
-#ifdef __cplusplus
+    /* Frees the memory allocated for video devices */
+    void FreeVideoDevices(VideoDevice* devices);
 }
-#endif
-#endif //VIDEO_STREAM_H
+
+
+#endif // VIDEO_STREAM_HPP

@@ -2,7 +2,6 @@
 #define AUDIO_STREAM_LIBRARY_H
 
 #include "circular_buffer.h"
-#include "utils/exception.h"
 #include <portaudio.h>
 #include <stdbool.h>
 
@@ -10,7 +9,7 @@
 
 /* Default buffer size */
 #define DEFAULT_BUFFER_SIZE 1024
-
+#define MULTIMEDIA_STREAM_EXPORTS
 
 
 // Exported functions
@@ -90,9 +89,5 @@ extern "C" {
 #ifdef __cplusplus
 }
 #endif
-
-/* Global variable to handle errors */
-extern jmp_buf error_jmp_buf;
-
 
 #endif //AUDIO_STREAM_LIBRARY_H

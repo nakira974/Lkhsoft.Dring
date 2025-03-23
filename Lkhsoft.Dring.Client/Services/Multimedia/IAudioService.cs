@@ -4,7 +4,7 @@ using System.Runtime.InteropServices;
 
 #endregion
 
-namespace Lkhsoft.Dring.Client.Services;
+namespace Lkhsoft.Dring.Client.Services.Multimedia;
 
 /// <summary>
 /// Interface for audio service implementation
@@ -63,5 +63,5 @@ public interface IAudioService : IDisposable
     /// Gets the available audio devices on the system
     /// </summary>
     /// <returns>Available audio devices on the system</returns>
-    Device[] GetAudioDevices();
+    IEnumerable<HostAudioDevice> GetAudioDevices();
 }

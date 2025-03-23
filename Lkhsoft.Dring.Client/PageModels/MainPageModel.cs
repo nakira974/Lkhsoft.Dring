@@ -4,6 +4,7 @@ using System.Collections.ObjectModel;
 using CommunityToolkit.Mvvm.ComponentModel;
 using CommunityToolkit.Mvvm.Input;
 using Lkhsoft.Dring.Client.Models;
+using Lkhsoft.Dring.Client.Services.Multimedia;
 
 #endregion
 
@@ -18,11 +19,8 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
     private readonly CategoryRepository _categoryRepository;
     private readonly ModalErrorHandler _errorHandler;
     private readonly SeedDataService _seedDataService;
-    private readonly IAudioService _audioService;
+    private readonly INativeLibrariesImports _nativeLibrariesImports;
 
-    [ObservableProperty] private ObservableCollection<AudioDevice> _audioDevices = [];
-
-    [ObservableProperty] private AudioDevice? _selectedAudioDevice;
 
     [ObservableProperty] private List<CategoryChartData> _todoCategoryData = [];
 
@@ -43,9 +41,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
 
     public MainPageModel(SeedDataService seedDataService, ProjectRepository projectRepository,
         TaskRepository taskRepository, CategoryRepository categoryRepository, ModalErrorHandler errorHandler,
-        IAudioService audioService)
+        INativeLibrariesImports nativeLibrariesImports)
     {
-        _audioService = audioService;
+        _nativeLibrariesImports = nativeLibrariesImports;
         _projectRepository = projectRepository;
         _taskRepository = taskRepository;
         _categoryRepository = categoryRepository;
@@ -57,7 +55,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
     {
         try
         {
-            LoadAudioDevices();
+            LoadNativeLibraries();
             IsBusy = true;
 
             Projects = await _projectRepository.ListAsync();
@@ -99,13 +97,9 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
     }
 
     // Charger les périphériques audio
-    private void LoadAudioDevices()
+    private void LoadNativeLibraries()
     {
-        AudioDevices.Clear();
-        var devices = _audioService.GetAudioDevices().Where(x => x.IsInput);
-
-        foreach (var device in devices) AudioDevices.Add(new AudioDevice(device));
-        SelectedAudioDevice = AudioDevices.FirstOrDefault();
+        _nativeLibrariesImports.Load(NativeLibraries.MultimediaStream);
     }
 
     [RelayCommand]
@@ -143,7 +137,7 @@ public partial class MainPageModel : ObservableObject, IProjectTaskPageModel
     {
         if (!_dataLoaded)
         {
-            LoadAudioDevices();
+            LoadNativeLibraries();
             await InitData(_seedDataService);
             _dataLoaded = true;
             await Refresh();

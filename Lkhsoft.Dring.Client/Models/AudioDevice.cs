@@ -1,6 +1,6 @@
 #region
 
-using Device = Lkhsoft.Dring.Client.Services.Device;
+using Lkhsoft.Dring.Client.Services.Multimedia;
 
 #endregion
 
@@ -14,17 +14,17 @@ public class AudioDevice
     /// <summary>
     /// Default constructor
     /// </summary>
-    public AudioDevice(Device audioDevice)
+    public AudioDevice(HostAudioDevice audioHostAudioDevice)
     {
-        Name = audioDevice.Name;
-        IsInput = audioDevice.IsInput;
-        IsOutput = audioDevice.IsOutput;
-        HostApiIndex = audioDevice.HostApiIndex;
-        HostApiDeviceIndex = audioDevice.HostApiDeviceIndex;
-        HostApiType = audioDevice.HostApiType;
-        DefaultSampleRate = audioDevice.DefaultSampleRate;
-        MaxInputChannels = audioDevice.MaxInputChannels;
-        MaxOutputChannels = audioDevice.MaxOutputChannels;
+        Name = audioHostAudioDevice.Name;
+        IsInput = audioHostAudioDevice.IsInput;
+        IsOutput = audioHostAudioDevice.IsOutput;
+        HostApiIndex = audioHostAudioDevice.HostApiIndex;
+        HostApiDeviceIndex = audioHostAudioDevice.HostApiDeviceIndex;
+        HostApiType = audioHostAudioDevice.HostAudioApiType;
+        DefaultSampleRate = audioHostAudioDevice.DefaultSampleRate;
+        MaxInputChannels = audioHostAudioDevice.MaxInputChannels;
+        MaxOutputChannels = audioHostAudioDevice.MaxOutputChannels;
     }
 
     /// <summary>
@@ -70,5 +70,5 @@ public class AudioDevice
     /// <summary>
     /// Audio API type
     /// </summary>
-    public AudioApiType HostApiType { get; set; }
+    public HostAudioApiType HostApiType { get; set; }
 }

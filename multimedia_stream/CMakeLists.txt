@@ -1,7 +1,8 @@
 cmake_minimum_required(VERSION 3.15)
-project(multimedia_stream C)
+project(multimedia_stream LANGUAGES C CXX)
 
 set(CMAKE_C_STANDARD 99)
+set(CMAKE_CXX_STANDARD 14)
 
 if(${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     set(LKHSOFT_DRING_CLIENT_WINDOWS_BUILD_OUTPUT ${CMAKE_SOURCE_DIR}/../Lkhsoft.Dring.Client/bin/Debug/net9.0-windows10.0.19041.0/win10-x64)
@@ -30,6 +31,8 @@ FetchContent_Declare(
         GIT_REPOSITORY https://github.com/opencv/opencv.git
         GIT_TAG 4.11.0
 )
+
+set("WITH_FFMPEG" ON)
 
 # Fetch and make PortAudio available
 FetchContent_MakeAvailable(portaudio)
@@ -66,10 +69,12 @@ endif ()
 # Fichiers sources et en-têtes
 file(GLOB_RECURSE HEADERS_FILES
         ${PROJECT_SOURCE_DIR}/headers/*.h
+        ${PROJECT_SOURCE_DIR}/headers/*.hpp
         ${PROJECT_SOURCE_DIR}/headers/*.inl
 )
 file(GLOB_RECURSE SOURCES_FILES
         ${PROJECT_SOURCE_DIR}/sources/*.c
+        ${PROJECT_SOURCE_DIR}/sources/*.cpp
 )
 
 # Trouver et configurer les threads
@@ -88,7 +93,23 @@ include_directories(${PROJECT_SOURCE_DIR}/headers)
 add_library(${CMAKE_PROJECT_NAME} SHARED ${SOURCES_FILES} ${HEADERS_FILES})
 
 # Lier portaudio
-target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE portaudio opencv_core opencv_highgui opencv_videoio opencv_imgproc)
+target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
+        portaudio
+        opencv_core
+        opencv_highgui
+        opencv_videoio
+        opencv_imgproc
+        opencv_imgcodecs
+        zlib
+        IlmImf)
+
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    target_link_libraries(${CMAKE_PROJECT_NAME} PRIVATE
+            strmiids
+            ole32
+            oleaut32
+    )
+endif ()
 
 target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         ${portaudio_SOURCE_DIR}/include
@@ -104,6 +125,69 @@ set_target_properties(portaudio PROPERTIES
         RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
         ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
         LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+)
+
+# Définir le répertoire de sortie pour OpenCV core
+set_target_properties(opencv_core PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+)
+
+# Définir le répertoire de sortie pour OpenCV highgui
+set_target_properties(opencv_highgui PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+)
+
+# Définir le répertoire de sortie pour OpenCV videoio
+set_target_properties(opencv_videoio PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+)
+
+# Définir le répertoire de sortie pour OpenCV imgproc
+set_target_properties(opencv_imgproc PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+)
+
+# Définir le répertoire de sortie pour zlib
+set_target_properties(zlib PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+)
+
+# Définir le répertoire de sortie pour OpenCV imgcodecs
+set_target_properties(opencv_imgcodecs PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+)
+
+# Définir le répertoire de sortie pour OpenCV imgproc
+set_target_properties(IlmImf PROPERTIES
+        RUNTIME_OUTPUT_DIRECTORY ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
+        LIBRARY_OUTPUT_DIRECTORY ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+)
+
+# Installer les bibliothèques et leurs dépendances dans le répertoire de sortie
+install(TARGETS ${CMAKE_PROJECT_NAME}
+        RUNTIME DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        LIBRARY DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+        ARCHIVE DESTINATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
+)
+
+# Installer les dépendances d'OpenCV
+install(TARGETS opencv_core opencv_highgui opencv_videoio opencv_imgproc opencv_imgcodecs zlib IlmImf
+        RUNTIME DESTINATION ${CMAKE_RUNTIME_OUTPUT_DIRECTORY}
+        LIBRARY DESTINATION ${CMAKE_LIBRARY_OUTPUT_DIRECTORY}
+        ARCHIVE DESTINATION ${CMAKE_ARCHIVE_OUTPUT_DIRECTORY}
 )
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows" AND ${CMAKE_BUILD_TYPE} STREQUAL "Debug")

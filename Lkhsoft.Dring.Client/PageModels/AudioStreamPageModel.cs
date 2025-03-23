@@ -5,6 +5,7 @@ using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
 using Lkhsoft.Dring.Client.Models;
+using Lkhsoft.Dring.Client.Services.Multimedia;
 
 #endregion
 
@@ -13,13 +14,17 @@ namespace Lkhsoft.Dring.Client.PageModels;
 public partial class AudioStreamPageModel : INotifyPropertyChanged
 {
     private readonly IAudioService _audioService;
+    private readonly IVideoService _videoService;
+    
     private AudioDevice _selectedInputInputAudioDevice;
     private AudioDevice _selectedOutputAudioDevice;
+    private HostVideoDevice _selectedInputVideoDevice;
     private bool _isStreaming;
     private string _statusMessage;
 
     public ObservableCollection<AudioDevice> InputAudioDevices { get; } = [];
     public ObservableCollection<AudioDevice> OutputAudioDevices { get; } = [];
+    public ObservableCollection<VideoDevice> VideoDevices { get; } = [];
 
     public AudioDevice SelectedInputAudioDevice
     {
@@ -37,6 +42,16 @@ public partial class AudioStreamPageModel : INotifyPropertyChanged
         set
         {
             _selectedOutputAudioDevice = value;
+            OnPropertyChanged();
+        }
+    }
+    
+    public HostVideoDevice SelectedVideoDevice
+    {
+        get => _selectedInputVideoDevice;
+        set
+        {
+            _selectedInputVideoDevice = value;
             OnPropertyChanged();
         }
     }
@@ -68,14 +83,16 @@ public partial class AudioStreamPageModel : INotifyPropertyChanged
     public ICommand StopStreamingCommand { get; }
 
 
-    public AudioStreamPageModel(IAudioService audioService)
+    public AudioStreamPageModel(IAudioService audioService, IVideoService videoService)
     {
         _audioService = audioService;
+        _videoService = videoService;
 
         // Charger les périphériques audio
         InputAudioDevices.Clear();
         OutputAudioDevices.Clear();
         LoadAudioDevices();
+        LoadVideoDevices();
 
         // Commandes
         StartStreamingCommand = new Command(StartStreaming);
@@ -84,9 +101,15 @@ public partial class AudioStreamPageModel : INotifyPropertyChanged
 
     private void LoadAudioDevices()
     {
-        var devices = _audioService.GetAudioDevices();
+        var devices = _audioService.GetAudioDevices().ToArray();
         foreach (var device in devices.Where(x => x.IsInput)) InputAudioDevices.Add(new AudioDevice(device));
         foreach (var device in devices.Where(x => !x.IsInput)) OutputAudioDevices.Add(new AudioDevice(device));
+    }
+
+    private void LoadVideoDevices()
+    {
+        var devices = _videoService.GetVideoDevices().ToArray();
+        foreach (var device in devices) VideoDevices.Add(new VideoDevice(device));
     }
 
     private void StartStreaming()

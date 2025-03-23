@@ -2,10 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-
-/* Buffer for error handling */
-jmp_buf error_jmp_buf;
+#include "utils/exception.h"
 
 /* Callback function for audio capture */
 static int recordAudioCallback(const void *inputBuffer, void *outputBuffer,

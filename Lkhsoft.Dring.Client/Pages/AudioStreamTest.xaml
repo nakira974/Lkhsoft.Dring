@@ -23,6 +23,11 @@
                 ItemsSource="{Binding OutputAudioDevices}"
                 SelectedItem="{Binding SelectedOutputAudioDevice, Mode=TwoWay}" />
 
+            <Picker
+                ItemDisplayBinding="{Binding Name}"
+                ItemsSource="{Binding VideoDevices}"
+                SelectedItem="{Binding SelectedVideoDevice, Mode=TwoWay}" />
+            
             <!--  Bouton pour démarrer l'envoi des données  -->
             <Button
                 Command="{Binding StartStreamingCommand}"
