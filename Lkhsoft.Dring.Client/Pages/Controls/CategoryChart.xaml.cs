@@ -1,10 +1,9 @@
-namespace Lkhsoft.Dring.Client.Pages.Controls
+namespace Lkhsoft.Dring.Client.Pages.Controls;
+
+public partial class CategoryChart
 {
-    public partial class CategoryChart
+    public CategoryChart()
     {
-        public CategoryChart()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

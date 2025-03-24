@@ -2,7 +2,6 @@
 
 using System.ComponentModel.Composition;
 using System.Globalization;
-using Lkhsoft.Dring.Server.Utility;
 using Lkhsoft.Dring.Shared.Cli;
 using Lkhsoft.Dring.Shared.Core;
 using Lkhsoft.Dring.Shared.Core.Authentication;
