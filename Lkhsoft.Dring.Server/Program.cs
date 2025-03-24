@@ -172,6 +172,10 @@ internal class Program
         while (cancellationToken.IsCancellationRequested == false)
         {
             var client = await listener.AcceptTcpClientAsync(cancellationToken);
+            var logMessage =
+                $"Client from {client.Client.RemoteEndPoint} connected";
+            Console.WriteLine(logMessage);
+            _logger.LogInfo(logMessage);
         
             _ = Task.Run(() => HandleClient(client, cancellationToken), cancellationToken);
         }
@@ -217,25 +221,31 @@ internal class Program
             
            if (connectedUser is null || !client.Connected || connectionAttempt >= 3)
            {
-               if(!client.Connected)
+               if (!client.Connected)
+               {
                    throw new AuthenticationException("Client déconnecté");
-                
-               if(connectionAttempt >= 3)
+               }
+
+               if (connectionAttempt >= 3)
+               {
                    throw new AuthenticationException("Nombre de tentatives d'authentification dépassé");
-                
+               }
+               
                throw new AuthenticationException("Client non authentifié");
            }
 
-           Console.WriteLine($"Client connected: {connectedUser}");
+           var loginMessage = $"Client {client.Client.RemoteEndPoint} is now authentified: {connectedUser}";
+           Console.WriteLine(loginMessage);
+           _logger.LogInfo(loginMessage);
            Clients.TryAdd(connectedUser, sslStream);
 
-           _ = Job(connectedUser, stream, cancellationToken);
+           _ = Job(client, connectedUser, stream, cancellationToken);
        }
        catch (Exception ex)
        {
-           var errorMessage = ex is AuthenticationException ? $"Erreur d'authentication: {ex.Message}" : $"Erreur dans ReceiveTcp: {ex.Message}";
+           var errorMessage = ex is AuthenticationException ? $"Client {client.Client.RemoteEndPoint} authentication error: {ex.Message}" : $"Client {client.Client.RemoteEndPoint} error in ReceiveTcp: {ex.Message}";
            Console.WriteLine(errorMessage);
-           _logger.LogInfo(errorMessage);
+           _logger.LogWarning(errorMessage);
            client.Close();
        }
     }
@@ -269,10 +279,11 @@ internal class Program
     /// <summary>
     ///     Processes messages for a specific client
     /// </summary>
+    /// <param name="client">Client's tcp socket</param>
     /// <param name="connectedUser">The ID of the client</param>
     /// <param name="stream">The client's stream</param>
     /// <param name="cancellationToken">Cancellation token</param>
-    private static async Task Job(ConnectedUser? connectedUser, NetworkStream stream, CancellationToken cancellationToken)
+    private static async Task Job(TcpClient client, ConnectedUser? connectedUser, NetworkStream stream, CancellationToken cancellationToken)
     {
         while (stream.CanRead)
         {
@@ -283,7 +294,9 @@ internal class Program
                 var bytesRead = await stream.ReadAsync(buffer, 0, buffer.Length, cancellationToken);
                 if (bytesRead == 0)
                 {
-                    Console.WriteLine($"Client disconnected: {connectedUser?.UserName}");
+                    var logoffMessage = $"Client {connectedUser} logged off";
+                    Console.WriteLine(logoffMessage);
+                    _logger.LogInfo(logoffMessage);
                     Clients.TryRemove(connectedUser ?? throw new ArgumentNullException(nameof(connectedUser)), out _);
                     break;
                 }
@@ -297,7 +310,9 @@ internal class Program
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error in Job loop for client {connectedUser}: {ex.Message}");
+                var errorMessage = $"Client {client.Client.RemoteEndPoint} error in Job loop {connectedUser} : {ex.Message}";
+                Console.WriteLine(errorMessage);
+                _logger.LogWarning(errorMessage);
                 break;
             }
         }
@@ -340,7 +355,9 @@ internal class Program
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error authenticating client: {ex.Message}");
+            var errorMessage = $"Error authenticating client: {ex.Message}";
+            Console.WriteLine(errorMessage);
+            _logger.LogWarning(errorMessage);
         }
 
         var unauthorizedResponse = new Message(MessageType.Authentication, [0x0], 0, 1);
@@ -374,11 +391,12 @@ internal class Program
                 // Évite les appels multiples
                 if (isExiting) return; 
                 isExiting = true;
-                await tokenSource.CancelAsync();
                 Console.WriteLine("Shutdown signal received. Cleaning up...");
+                _logger.LogInfo("Shutdown signal received");
                 Console.WriteLine("Server is shutting down gracefully");
-                DefaultContainer.Get<IAppLogger>()?.LogTrace("Shutdown signal received, server shut down gracefully");
+                _logger.LogInfo("Server is shutting down gracefully");
                 DefaultContainer.Get<ISessionService>()?.ClearAllSessions();
+                await tokenSource.CancelAsync();
             }
             catch(Exception ex)
             {
@@ -412,7 +430,9 @@ internal class Program
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error in Auth: {ex.Message}");
+            var errorMessage = $"Error in Auth: {ex.Message}";
+            Console.WriteLine(errorMessage);
+            _logger.LogWarning(errorMessage);
             return false;
         }
     }
@@ -441,12 +461,16 @@ internal class Program
             var certificate = new X509Certificate2(certificatePath, secureString,
                 X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet);
 
-            Console.WriteLine("Certificate loaded successfully!");
+            var successMessage = $"Certificate loaded successfully: {certificate.Subject}";
+            Console.WriteLine(successMessage);
+            DefaultContainer.Get<IAppLogger>()?.LogTrace(successMessage);
             return certificate;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error loading certificate: {ex.Message}");
+            var errorMessage = $"Error loading certificate: {ex.Message}";
+            Console.WriteLine(errorMessage);
+            DefaultContainer.Get<IAppLogger>()?.LogError(errorMessage);
             return null;
         }
     }
