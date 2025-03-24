@@ -12,7 +12,7 @@ extern "C"{
         /* Device index */
         int index;
         /* Device name */
-        std::string name;
+        char name[256];
     };
 
     /* Captures a frame from a video device */

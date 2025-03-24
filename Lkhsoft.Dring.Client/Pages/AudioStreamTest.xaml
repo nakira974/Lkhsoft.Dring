@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8" ?>
 
 <ContentPage
     x:Class="Lkhsoft.Dring.Client.Pages.AudioStreamTest"
@@ -23,11 +23,12 @@
                 ItemsSource="{Binding OutputAudioDevices}"
                 SelectedItem="{Binding SelectedOutputAudioDevice, Mode=TwoWay}" />
 
+            <Label Text="Select Video Device:" />
             <Picker
                 ItemDisplayBinding="{Binding Name}"
                 ItemsSource="{Binding VideoDevices}"
                 SelectedItem="{Binding SelectedVideoDevice, Mode=TwoWay}" />
-            
+
             <!--  Bouton pour démarrer l'envoi des données  -->
             <Button
                 Command="{Binding StartStreamingCommand}"
