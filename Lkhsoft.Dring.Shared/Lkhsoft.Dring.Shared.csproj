@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
     <PropertyGroup>
-        <PackageVersion>1.0.1-alpha</PackageVersion>
+        <AssemblyVersion>1.0.1</AssemblyVersion>
+        <FileVersion>$(AssemblyVersion)</FileVersion>
         <TargetFramework>net8.0</TargetFramework>
         <ImplicitUsings>enable</ImplicitUsings>
         <Nullable>enable</Nullable>
@@ -19,6 +20,14 @@
         <LangVersion>default</LangVersion>
     </PropertyGroup>
 
+    <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+        <Version>$(AssemblyVersion)-alpha</Version>
+    </PropertyGroup>
+
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+        <Version>$(AssemblyVersion)</Version>
+    </PropertyGroup>
+
     <ItemGroup>
         <PackageReference Include="NLog" Version="5.3.4"/>
         <PackageReference Include="NLua" Version="1.7.3"/>
@@ -30,11 +39,11 @@
     </ItemGroup>
 
     <ItemGroup>
-      <None Remove="logo.png" />
+        <None Remove="logo.png"/>
     </ItemGroup>
 
     <ItemGroup>
-        <None Include="logo.png" Pack="true" PackagePath="/" />
+        <None Include="logo.png" Pack="true" PackagePath="/"/>
     </ItemGroup>
-    
+
 </Project>

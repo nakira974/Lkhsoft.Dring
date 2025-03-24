@@ -1,21 +1,24 @@
-using Lkhsoft.Dring.Client.Models;
-using System.Diagnostics.CodeAnalysis;
+#region
 
-namespace Lkhsoft.Dring.Client.Utilities
+using System.Diagnostics.CodeAnalysis;
+using Lkhsoft.Dring.Client.Models;
+
+#endregion
+
+namespace Lkhsoft.Dring.Client.Utilities;
+
+/// <summary>
+/// Project Model Extentions
+/// </summary>
+public static class ProjectExtentions
 {
     /// <summary>
-    /// Project Model Extentions
+    /// Check if the project is null or new.
     /// </summary>
-    public static class ProjectExtentions
+    /// <param name="project"></param>
+    /// <returns></returns>
+    public static bool IsNullOrNew([NotNullWhen(false)] this Project? project)
     {
-        /// <summary>
-        /// Check if the project is null or new.
-        /// </summary>
-        /// <param name="project"></param>
-        /// <returns></returns>
-        public static bool IsNullOrNew([NotNullWhen(false)] this Project? project)
-        {
-            return project is null || project.ID == 0;
-        }
+        return project is null || project.ID == 0;
     }
 }

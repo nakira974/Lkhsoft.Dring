@@ -1,12 +1,15 @@
+#region
+
 using Syncfusion.Maui.Toolkit.Charts;
 
-namespace Lkhsoft.Dring.Client.Pages.Controls
+#endregion
+
+namespace Lkhsoft.Dring.Client.Pages.Controls;
+
+public class LegendExt : ChartLegend
 {
-    public class LegendExt : ChartLegend
+    protected override double GetMaximumSizeCoefficient()
     {
-        protected override double GetMaximumSizeCoefficient()
-        {
-            return 0.5;
-        }
+        return 0.5;
     }
 }

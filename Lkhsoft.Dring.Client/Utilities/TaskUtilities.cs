@@ -1,27 +1,24 @@
-using Lkhsoft.Dring.Client.Services;
+namespace Lkhsoft.Dring.Client.Utilities;
 
-namespace Lkhsoft.Dring.Client.Utilities
+/// <summary>
+/// Task Utilities.
+/// </summary>
+public static class TaskUtilities
 {
     /// <summary>
-    /// Task Utilities.
+    /// Fire and Forget Safe Async.
     /// </summary>
-    public static class TaskUtilities
+    /// <param name="task">Task to Fire and Forget.</param>
+    /// <param name="handler">Error Handler.</param>
+    public static async void FireAndForgetSafeAsync(this Task task, IErrorHandler? handler = null)
     {
-        /// <summary>
-        /// Fire and Forget Safe Async.
-        /// </summary>
-        /// <param name="task">Task to Fire and Forget.</param>
-        /// <param name="handler">Error Handler.</param>
-        public static async void FireAndForgetSafeAsync(this Task task, IErrorHandler? handler = null)
+        try
         {
-            try
-            {
-                await task;
-            }
-            catch (Exception ex)
-            {
-                handler?.HandleError(ex);
-            }
+            await task;
+        }
+        catch (Exception ex)
+        {
+            handler?.HandleError(ex);
         }
     }
 }

@@ -1,10 +1,9 @@
-namespace Lkhsoft.Dring.Client.Pages.Controls
+namespace Lkhsoft.Dring.Client.Pages.Controls;
+
+public partial class ProjectCardView
 {
-    public partial class ProjectCardView
+    public ProjectCardView()
     {
-        public ProjectCardView()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }
