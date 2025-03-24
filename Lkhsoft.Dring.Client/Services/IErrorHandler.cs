@@ -1,14 +1,13 @@
-namespace Lkhsoft.Dring.Client.Services
+namespace Lkhsoft.Dring.Client.Services;
+
+/// <summary>
+/// Error Handler Service.
+/// </summary>
+public interface IErrorHandler
 {
     /// <summary>
-    /// Error Handler Service.
+    /// Handle error in UI.
     /// </summary>
-    public interface IErrorHandler
-    {
-        /// <summary>
-        /// Handle error in UI.
-        /// </summary>
-        /// <param name="ex">Exception being thrown.</param>
-        void HandleError(Exception ex);
-    }
+    /// <param name="ex">Exception being thrown.</param>
+    void HandleError(Exception ex);
 }

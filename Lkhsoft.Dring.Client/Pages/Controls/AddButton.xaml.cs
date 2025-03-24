@@ -1,10 +1,9 @@
-namespace Lkhsoft.Dring.Client.Pages.Controls
+namespace Lkhsoft.Dring.Client.Pages.Controls;
+
+public partial class AddButton
 {
-    public partial class AddButton
+    public AddButton()
     {
-        public AddButton()
-        {
-            InitializeComponent();
-        }
+        InitializeComponent();
     }
 }

@@ -3,6 +3,7 @@
 using System.ComponentModel.Composition;
 using System.Data.SQLite;
 using System.Security.Cryptography;
+using System.Text;
 using Lkhsoft.Dring.Shared.Cli;
 using Lkhsoft.Dring.Shared.Core.Authentication;
 using Lkhsoft.Dring.Shared.Core.Logger;
@@ -46,7 +47,7 @@ public class AddUserCommand : AuthenticationCommandBase
         }
 
         string? password;
-        var iv = GetRandomIv();
+        var iv = GetDeterministicIv(username);
         try
         {
             Console.WriteLine("\nEnter the password for the new user");
@@ -72,6 +73,28 @@ public class AddUserCommand : AuthenticationCommandBase
     }
 
     /// <summary>
+    /// Generate a deterministic IV of 16 bytes length
+    /// </summary>
+    /// <param name="username">Username to be used to generate the initialization vector</param>
+    /// <returns>A deterministic initialization vector based on the username</returns>
+    private static string GetDeterministicIv(string username)
+    {
+        // Convertir l'username en tableau de bytes
+        var usernameBytes = Encoding.UTF8.GetBytes(username);
+
+        // Utiliser SHA256 pour générer un hash de l'username
+        using var sha256 = SHA256.Create();
+        var hash = sha256.ComputeHash(usernameBytes);
+
+        // Prendre les 8 premiers octets du hash
+        var iv = new byte[8];
+        Array.Copy(hash, iv, 8);
+
+        // Convertir les 8 octets en une chaîne hexadécimale
+        return BitConverter.ToString(iv).Replace("-", string.Empty);
+    }
+
+    /// <summary>
     /// Generate a random IV of 16 bytes length
     /// </summary>
     /// <returns>A random initialization vector</returns>
@@ -80,6 +103,7 @@ public class AddUserCommand : AuthenticationCommandBase
         var iv = new byte[8];
         using var rng = RandomNumberGenerator.Create();
         rng.GetBytes(iv);
+        // Convertir les 8 octets en une chaîne hexadécimale
         return BitConverter.ToString(iv).Replace("-", string.Empty);
     }
 

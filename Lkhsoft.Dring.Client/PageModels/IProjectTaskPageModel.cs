@@ -1,11 +1,14 @@
+#region
+
 using CommunityToolkit.Mvvm.Input;
 using Lkhsoft.Dring.Client.Models;
 
-namespace Lkhsoft.Dring.Client.PageModels
+#endregion
+
+namespace Lkhsoft.Dring.Client.PageModels;
+
+public interface IProjectTaskPageModel
 {
-    public interface IProjectTaskPageModel
-    {
-        IAsyncRelayCommand<ProjectTask> NavigateToTaskCommand { get; }
-        bool IsBusy { get; }
-    }
+    IAsyncRelayCommand<ProjectTask> NavigateToTaskCommand { get; }
+    bool IsBusy { get; }
 }
