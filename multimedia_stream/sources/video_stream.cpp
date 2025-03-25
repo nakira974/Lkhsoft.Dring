@@ -54,7 +54,16 @@ unsigned char* CaptureFrame(int deviceIndex, int* width, int* height, int* chann
 
         // Convertir l'image en format BGR
         cv::Mat bmpFrame;
-        cv::cvtColor(frame, bmpFrame, cv::COLOR_BGR2RGB);
+        cv::setUseOptimized(false);
+        // Conversion manuelle si nécessaire
+        if (frame.channels() == 1) {
+            cv::cvtColor(frame, bmpFrame, cv::COLOR_GRAY2RGB);
+        } else if (frame.channels() == 4) {
+            cv::cvtColor(frame, bmpFrame, cv::COLOR_BGRA2RGB);
+        } else {
+            cv::cvtColor(frame, bmpFrame, cv::COLOR_BGR2RGB);
+        }
+
 
         // Allouer un buffer pour stocker les données de l'image
         int bufferSize = bmpFrame.total() * bmpFrame.elemSize();

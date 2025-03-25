@@ -1,51 +1,110 @@
 <?xml version="1.0" encoding="utf-8" ?>
-
 <ContentPage
     x:Class="Lkhsoft.Dring.Client.Pages.AudioStreamTest"
     xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
     xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
     xmlns:pageModels="clr-namespace:Lkhsoft.Dring.Client.PageModels"
-    Title="Audio Stream Test"
+    xmlns:skia="clr-namespace:SkiaSharp.Views.Maui.Controls;assembly=SkiaSharp.Views.Maui.Controls"
+    Title="Audio/Video Stream Test"
     x:DataType="pageModels:AudioStreamPageModel">
 
-    <ContentPage.Content>
-        <VerticalStackLayout Padding="20" Spacing="10">
-            <!--  Sélection du périphérique audio  -->
-            <Label Text="Select Input Audio Device:" />
+    <ScrollView>
+        <Grid
+            Padding="20"
+            ColumnDefinitions="*,*"
+            ColumnSpacing="15"
+            RowDefinitions="Auto,Auto,Auto,Auto,Auto,Auto,Auto,Auto"
+            RowSpacing="15">
+
+            <!--  Section Audio Input  -->
+            <Label
+                Grid.Row="0"
+                Grid.Column="0"
+                Text="Input Audio Device:" />
             <Picker
+                Grid.Row="1"
+                Grid.Column="0"
                 ItemDisplayBinding="{Binding Name}"
                 ItemsSource="{Binding InputAudioDevices}"
                 SelectedItem="{Binding SelectedInputAudioDevice, Mode=TwoWay}" />
 
-            <Label Text="Select Output Audio Device:" />
+            <!--  Section Audio Output  -->
+            <Label
+                Grid.Row="0"
+                Grid.Column="1"
+                Text="Output Audio Device:" />
             <Picker
+                Grid.Row="1"
+                Grid.Column="1"
                 ItemDisplayBinding="{Binding Name}"
                 ItemsSource="{Binding OutputAudioDevices}"
                 SelectedItem="{Binding SelectedOutputAudioDevice, Mode=TwoWay}" />
 
-            <Label Text="Select Video Device:" />
+            <!--  Section Video Device  -->
+            <Label
+                Grid.Row="2"
+                Grid.ColumnSpan="2"
+                Text="Video Device:" />
             <Picker
+                Grid.Row="3"
+                Grid.ColumnSpan="2"
                 ItemDisplayBinding="{Binding Name}"
                 ItemsSource="{Binding VideoDevices}"
                 SelectedItem="{Binding SelectedVideoDevice, Mode=TwoWay}" />
 
-            <!--  Bouton pour démarrer l'envoi des données  -->
+            <!--  Video Display  -->
+            <Frame
+                Grid.Row="4"
+                Grid.ColumnSpan="2"
+                Padding="0"
+                HasShadow="True">
+                <skia:SKCanvasView
+                    x:Name="VideoCanvas"
+                    EnableTouchEvents="True"
+                    HeightRequest="360"
+                    IgnorePixelScaling="True"
+                    PaintSurface="OnPaintSurface" />
+            </Frame>
+
+            <!--  Control Buttons  -->
             <Button
+                Grid.Row="5"
+                Grid.Column="0"
                 Command="{Binding StartStreamingCommand}"
                 IsEnabled="{Binding IsNotStreaming}"
-                Text="Start Streaming" />
+                Text="Start Audio Stream" />
 
-            <!--  Bouton pour arrêter l'envoi des données  -->
             <Button
+                Grid.Row="5"
+                Grid.Column="1"
                 Command="{Binding StopStreamingCommand}"
                 IsEnabled="{Binding IsStreaming}"
-                Text="Stop Streaming" />
+                Text="Stop Audio Stream" />
 
-            <!--  Indicateur de statut  -->
-            <Label
-                HorizontalOptions="Center"
-                Text="{Binding StatusMessage}"
-                VerticalOptions="Center" />
-        </VerticalStackLayout>
-    </ContentPage.Content>
+            <Button
+                Grid.Row="6"
+                Grid.Column="0"
+                Command="{Binding StartVideoCommand}"
+                Text="Start Video Stream" />
+
+            <Button
+                Grid.Row="6"
+                Grid.Column="1"
+                Command="{Binding StopVideoCommand}"
+                Text="Stop Video Stream" />
+
+            <!--  Status Indicators  -->
+            <!--
+            <Label Text="{Binding AudioStatus}"
+                   Grid.Row="7" Grid.Column="0"
+                   FontAttributes="Italic"
+                   TextColor="{StaticResource SecondaryColor}"/>
+
+            <Label Text="{Binding VideoStatus}"
+                   Grid.Row="7" Grid.Column="1"
+                   FontAttributes="Italic"
+                   TextColor="{StaticResource SecondaryColor}"/>
+            -->
+        </Grid>
+    </ScrollView>
 </ContentPage>
