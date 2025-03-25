@@ -176,37 +176,79 @@ public partial class AudioStreamPageModel : INotifyPropertyChanged
         }
     }
 
-    public void UpdateFrame(byte[] frameData, int width, int height, int channels)
+    public void UpdateFrame(byte[] jpegData, int width, int height, int channels)
     {
         try
         {
-            // Vérification des dimensions
-            if (width <= 0 || height <= 0 || channels != 3)
+            if (jpegData == null || jpegData.Length == 0)
             {
-                Debug.WriteLine("Format d'image invalide");
+                Debug.WriteLine("Aucune donnée JPEG reçue");
                 return;
             }
 
-            // Création du bitmap SkiaSharp directement depuis les données RGB
-            var info = new SKImageInfo(width, height, SKColorType.Rgb888x, SKAlphaType.Opaque);
+            // Utilisation de SKCodec pour le décodage optimisé
+            using var stream = new MemoryStream(jpegData);
+            using var codec = SKCodec.Create(stream);
 
             // Recyclage du bitmap existant
-            if (_currentFrame == null || _currentFrame.Width != width || _currentFrame.Height != height)
+            if (_currentFrame == null ||
+                _currentFrame.Width != codec.Info.Width ||
+                _currentFrame.Height != codec.Info.Height)
             {
                 _currentFrame?.Dispose();
-                _currentFrame = new SKBitmap(info);
+                _currentFrame = new SKBitmap(codec.Info.Width, codec.Info.Height,
+                                           SKColorType.Rgba8888, SKAlphaType.Premul);
             }
 
-            // Copie directe des données RGB
-            var pixels = _currentFrame.GetPixels();
-            Marshal.Copy(frameData, 0, pixels, Math.Min(frameData.Length, _currentFrame.ByteCount));
+            // Décodage direct dans le bitmap existant
+            var result = codec.GetPixels(_currentFrame.Info, _currentFrame.GetPixels());
+            if (result != SKCodecResult.Success)
+            {
+                Debug.WriteLine($"Erreur de décodage: {result}");
+                return;
+            }
 
-            Device.BeginInvokeOnMainThread(() => CanvasView?.InvalidateSurface());
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                try
+                {
+                    CanvasView?.InvalidateSurface();
+                }
+                catch (Exception ex)
+                {
+                    Debug.WriteLine($"Erreur d'invalidation: {ex.Message}");
+                }
+            });
         }
         catch (Exception ex)
         {
             Debug.WriteLine($"Erreur UpdateFrame: {ex.Message}");
+
+            // Fallback: Afficher une image d'erreur
+            Device.BeginInvokeOnMainThread(() =>
+            {
+                _currentFrame?.Dispose();
+                _currentFrame = CreateErrorBitmap(width, height);
+                CanvasView?.InvalidateSurface();
+            });
         }
+    }
+
+    private SKBitmap CreateErrorBitmap(int width, int height)
+    {
+        var bitmap = new SKBitmap(Math.Max(1, width), Math.Max(1, height));
+        using var canvas = new SKCanvas(bitmap);
+        canvas.Clear(SKColors.Red);
+
+        using var paint = new SKPaint
+        {
+            Color = SKColors.White,
+            TextSize = 24,
+            IsAntialias = true
+        };
+
+        canvas.DrawText("Erreur de flux", 10, height / 2, paint);
+        return bitmap;
     }
 
     public void DrawFrame(SKSurface surface, SKImageInfo info)
