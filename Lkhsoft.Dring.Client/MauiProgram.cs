@@ -5,6 +5,7 @@ using Lkhsoft.Dring.Client.Services.Authentication;
 using Lkhsoft.Dring.Client.Services.Multimedia;
 using Lkhsoft.Dring.Client.Services.SIP;
 using Microsoft.Extensions.Logging;
+using SkiaSharp.Views.Maui.Controls.Hosting;
 using Syncfusion.Maui.Toolkit.Hosting;
 
 #endregion
@@ -28,6 +29,7 @@ public static class MauiProgram
                 fonts.AddFont("SegoeUI-Semibold.ttf", "SegoeSemibold");
                 fonts.AddFont("FluentSystemIcons-Regular.ttf", FluentUI.FontFamily);
             });
+        builder.UseSkiaSharp();
 
 #if DEBUG
         builder.Logging.AddDebug();
