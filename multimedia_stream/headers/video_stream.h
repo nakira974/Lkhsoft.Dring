@@ -16,7 +16,7 @@ extern "C"{
     };
 
     /* Captures a frame from a video device */
-    unsigned char* CaptureFrame(int deviceIndex, int* width, int* height, int* channels);
+    unsigned char* CaptureFrame(int deviceIndex, int* width, int* height, int* channels, int* bufferSize);
 
     /* Frees the memory allocated for a frame */
     void FreeFrame(unsigned char* frame);

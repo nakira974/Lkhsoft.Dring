@@ -7,6 +7,7 @@
 #include <opencv2/imgproc.hpp>
 #include <iostream>
 #include "utils/exception.h"
+#include "opencv2/imgcodecs.hpp"
 
 #ifdef _WIN32
 #include <windows.h>
@@ -29,55 +30,47 @@
 #endif
 
 
-unsigned char* CaptureFrame(int deviceIndex, int* width, int* height, int* channels) {
-    TRY{
-        // Ouvrir la capture vidéo
+unsigned char* CaptureFrame(int deviceIndex, int* width, int* height, int* channels, int* bufferSize) {
+    try {
         cv::VideoCapture cap(deviceIndex);
         if (!cap.isOpened()) {
             std::cerr << "Erreur : Impossible d'ouvrir la caméra." << std::endl;
-            THROW;
+            return nullptr;
         }
 
-        // Capturer une frame
         cv::Mat frame;
         cap >> frame;
         if (frame.empty()) {
             std::cerr << "Erreur : Impossible de capturer une image." << std::endl;
-            // Échec de la capture
-           THROW;
+            return nullptr;
         }
 
-        // Récupérer les dimensions de l'image
         *width = frame.cols;
         *height = frame.rows;
-        *channels = frame.channels();
+        *channels = 3; // JPEG sera toujours 3 canaux (RGB)
 
-        // Convertir l'image en format BGR
-        cv::Mat bmpFrame;
-        cv::setUseOptimized(false);
-        // Conversion manuelle si nécessaire
-        if (frame.channels() == 1) {
-            cv::cvtColor(frame, bmpFrame, cv::COLOR_GRAY2RGB);
-        } else if (frame.channels() == 4) {
-            cv::cvtColor(frame, bmpFrame, cv::COLOR_BGRA2RGB);
-        } else {
-            cv::cvtColor(frame, bmpFrame, cv::COLOR_BGR2RGB);
-        }
+        // Conversion en JPEG
+        std::vector<unsigned char> jpegBuffer;
+        cv::imencode(".jpg", frame, jpegBuffer, {
+            cv::IMWRITE_JPEG_QUALITY, 80,        // Qualité (0-100)
+            cv::IMWRITE_JPEG_OPTIMIZE, 1,        // Optimisation
+            cv::IMWRITE_JPEG_PROGRESSIVE, 1      // JPEG progressif
+        });
 
-
-        // Allouer un buffer pour stocker les données de l'image
-        int bufferSize = bmpFrame.total() * bmpFrame.elemSize();
-        unsigned char* result = new unsigned char[bufferSize];
-
-        // Copier les données de l'image dans le buffer
-        std::memcpy(result, bmpFrame.data, bufferSize);
-
-        return result; // Retourner les données de l'image
-    }CATCH{
-        std::cerr << "Erreur : Capture vidéo impossible" << std::endl;
+        // Allocation du buffer résultat
+        unsigned char* result = new unsigned char[jpegBuffer.size()];
+        std::memcpy(result, jpegBuffer.data(), jpegBuffer.size());
+        *bufferSize = static_cast<int>(jpegBuffer.size());
+        return result;
+    }
+    catch (const cv::Exception& e) {
+        std::cerr << "Erreur OpenCV: " << e.what() << std::endl;
         return nullptr;
     }
-    FINALLY;
+    catch (...) {
+        std::cerr << "Erreur inconnue lors de la capture" << std::endl;
+        return nullptr;
+    }
 }
 
 void FreeFrame(unsigned char* frame) {
