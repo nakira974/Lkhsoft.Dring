@@ -118,6 +118,7 @@ target_include_directories(${CMAKE_PROJECT_NAME} PRIVATE
         ${OPENCV_MODULE_opencv_highgui_LOCATION}/include
         ${OPENCV_MODULE_opencv_videoio_LOCATION}/include
         ${OPENCV_MODULE_opencv_imgproc_LOCATION}/include
+        ${OPENCV_MODULE_opencv_imgcodecs_LOCATION}/include
 )
 
 # Définir le répertoire de sortie pour PortAudio

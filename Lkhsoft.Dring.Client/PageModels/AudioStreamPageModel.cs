@@ -1,13 +1,11 @@
-#region
-
+using Lkhsoft.Dring.Client.Models;
+using Lkhsoft.Dring.Client.Services.Multimedia;
+using SkiaSharp;
 using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.Runtime.CompilerServices;
 using System.Windows.Input;
-using Lkhsoft.Dring.Client.Models;
-using Lkhsoft.Dring.Client.Services.Multimedia;
-
-#endregion
+using SkiaSharp.Views.Maui.Controls;
 
 namespace Lkhsoft.Dring.Client.PageModels;
 
@@ -15,46 +13,17 @@ public partial class AudioStreamPageModel : INotifyPropertyChanged
 {
     private readonly IAudioService _audioService;
     private readonly IVideoService _videoService;
-    
-    private AudioDevice _selectedInputInputAudioDevice;
-    private AudioDevice _selectedOutputAudioDevice;
-    private HostVideoDevice _selectedInputVideoDevice;
+    private SKBitmap? _currentFrame = new SKBitmap(1, 1);
     private bool _isStreaming;
-    private string _statusMessage;
 
     public ObservableCollection<AudioDevice> InputAudioDevices { get; } = [];
     public ObservableCollection<AudioDevice> OutputAudioDevices { get; } = [];
     public ObservableCollection<VideoDevice> VideoDevices { get; } = [];
 
-    public AudioDevice SelectedInputAudioDevice
-    {
-        get => _selectedInputInputAudioDevice;
-        set
-        {
-            _selectedInputInputAudioDevice = value;
-            OnPropertyChanged();
-        }
-    }
-
-    public AudioDevice SelectedOutputAudioDevice
-    {
-        get => _selectedOutputAudioDevice;
-        set
-        {
-            _selectedOutputAudioDevice = value;
-            OnPropertyChanged();
-        }
-    }
-    
-    public HostVideoDevice SelectedVideoDevice
-    {
-        get => _selectedInputVideoDevice;
-        set
-        {
-            _selectedInputVideoDevice = value;
-            OnPropertyChanged();
-        }
-    }
+    public AudioDevice SelectedInputAudioDevice { get; set; }
+    public AudioDevice SelectedOutputAudioDevice { get; set; }
+    public VideoDevice SelectedVideoDevice { get; set; }
+    public SKCanvasView? CanvasView { get; set; }
 
     public bool IsStreaming
     {
@@ -69,85 +38,115 @@ public partial class AudioStreamPageModel : INotifyPropertyChanged
 
     public bool IsNotStreaming => !_isStreaming;
 
-    public string StatusMessage
-    {
-        get => _statusMessage;
-        set
-        {
-            _statusMessage = value;
-            OnPropertyChanged();
-        }
-    }
-
     public ICommand StartStreamingCommand { get; }
     public ICommand StopStreamingCommand { get; }
-
+    public ICommand StartVideoCommand { get; }
+    public ICommand StopVideoCommand { get; }
 
     public AudioStreamPageModel(IAudioService audioService, IVideoService videoService)
     {
         _audioService = audioService;
         _videoService = videoService;
 
-        // Charger les périphériques audio
-        InputAudioDevices.Clear();
-        OutputAudioDevices.Clear();
-        LoadAudioDevices();
-        LoadVideoDevices();
+        LoadDevices();
 
-        // Commandes
         StartStreamingCommand = new Command(StartStreaming);
         StopStreamingCommand = new Command(StopStreaming);
+        StartVideoCommand = new Command(StartVideo);
+        StopVideoCommand = new Command(StopVideo);
     }
 
-    private void LoadAudioDevices()
+    private void LoadDevices()
     {
-        var devices = _audioService.GetAudioDevices().ToArray();
-        foreach (var device in devices.Where(x => x.IsInput)) InputAudioDevices.Add(new AudioDevice(device));
-        foreach (var device in devices.Where(x => !x.IsInput)) OutputAudioDevices.Add(new AudioDevice(device));
+        InputAudioDevices.Clear();
+        OutputAudioDevices.Clear();
+        VideoDevices.Clear();
+
+        foreach (var device in _audioService.GetAudioDevices().Where(x => x.IsInput))
+            InputAudioDevices.Add(new AudioDevice(device));
+
+        foreach (var device in _audioService.GetAudioDevices().Where(x => !x.IsInput))
+            OutputAudioDevices.Add(new AudioDevice(device));
+
+        foreach (var device in _videoService.GetVideoDevices())
+            VideoDevices.Add(new VideoDevice(device));
     }
 
-    private void LoadVideoDevices()
+    private void UpdateVideoFrame(SKBitmap frame)
     {
-        var devices = _videoService.GetVideoDevices().ToArray();
-        foreach (var device in devices) VideoDevices.Add(new VideoDevice(device));
+        _currentFrame?.Dispose();
+        _currentFrame = frame;
+        try
+        {
+            CanvasView?.InvalidateSurface();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur d'invalidation: {ex.Message}");
+        }
     }
+
+    public SKBitmap VideoFrame 
+    {
+        get => _currentFrame;
+        private set
+        {
+            _currentFrame?.Dispose();
+            _currentFrame = value;
+            OnPropertyChanged();
+        
+            // Force le redraw explicitement
+            CanvasView?.InvalidateSurface();
+        }
+    }
+
 
     private void StartStreaming()
     {
-        if (SelectedInputAudioDevice is null)
-        {
-            StatusMessage = "Please select an audio device.";
+        if (SelectedInputAudioDevice == null || SelectedOutputAudioDevice == null)
             return;
-        }
 
-        // Démarrer la capture audio
         _audioService.StartCapture(SelectedInputAudioDevice.HostApiDeviceIndex,
-            (int) SelectedInputAudioDevice.DefaultSampleRate, SelectedInputAudioDevice.MaxInputChannels,
-            1024); // 44.1 kHz, 2 canaux
+            (int)SelectedInputAudioDevice.DefaultSampleRate, 
+            SelectedInputAudioDevice.MaxInputChannels, 
+            1024);
+
         _audioService.StartPlayBack(SelectedOutputAudioDevice.HostApiDeviceIndex,
-            (int) SelectedOutputAudioDevice.DefaultSampleRate, SelectedOutputAudioDevice.MaxOutputChannels, 1024);
+            (int)SelectedOutputAudioDevice.DefaultSampleRate,
+            SelectedOutputAudioDevice.MaxOutputChannels,
+            1024);
+
         IsStreaming = true;
-        StatusMessage = "Streaming started.";
     }
 
-    private void StopStreaming()
+    private void StartVideo()
     {
-        // Arrêter la capture audio
+        if (SelectedVideoDevice is null)
+            return;
+        
+        _videoService.Configure(SelectedVideoDevice.Index);
+        
+        _videoService.Start(frame => 
+            MainThread.BeginInvokeOnMainThread(() => UpdateVideoFrame(frame)));
+        
+        IsStreaming = true;
+    }
+
+    internal void StopStreaming()
+    {
         _audioService.StopEngine();
-
         IsStreaming = false;
-        StatusMessage = "Streaming stopped.";
     }
 
-    private void OnAudioDataReceived(float[] data, int size)
+    internal void StopVideo()
     {
-        // Envoyer les données audio via TCP
-        // (Implémentation à compléter)
+        _videoService.Dispose();
+        IsStreaming = false;
     }
 
-    public event PropertyChangedEventHandler PropertyChanged;
+    public event PropertyChangedEventHandler? PropertyChanged;
 
-    protected void OnPropertyChanged([CallerMemberName] string propertyName = null)
+    protected virtual void OnPropertyChanged([CallerMemberName] string? propertyName = null)
     {
         PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
     }
