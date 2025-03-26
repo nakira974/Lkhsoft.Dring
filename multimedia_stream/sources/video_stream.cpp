@@ -3,6 +3,7 @@
 //
 #include "video_stream.h"
 
+#include <atomic>
 #include <opencv2/videoio.hpp>
 #include <opencv2/imgproc.hpp>
 #include <iostream>
@@ -13,11 +14,13 @@
 #include <windows.h>
 #include <dshow.h>
 #include <comdef.h>
+#include <thread>
 #elif defined(__linux__)
 #include <linux/videodev2.h>
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/ioctl.h>
+#include <pthread.h>
 #elif defined(__ANDROID__)
 // En-têtes spécifiques à Android
 #elif defined(__APPLE__)
@@ -29,6 +32,119 @@
 #endif
 #endif
 
+#ifdef _WIN32
+typedef HANDLE ThreadHandle;
+typedef DWORD (WINAPI *ThreadFunc)(LPVOID);
+#else
+typedef pthread_t ThreadHandle;
+typedef void* (*ThreadFunc)(void*);
+#endif
+
+/* Structure interne du gestionnaire de flux vidéo */
+typedef struct {
+    /* Indique si le flux est en cours d'exécution */
+    bool running;
+    /* Handle du thread de capture */
+    ThreadHandle thread;
+    /* Callback de capture de trame */
+    FrameCallback callback;
+    /* Données utilisateur */
+    void* user_data;
+    /* FPS cible */
+    int target_fps;
+    /* Pointeur sur la capture vidéo d'opencv */
+    cv::VideoCapture* cap;
+} VideoStreamer;
+
+/* Handler de capture de trame */
+static void* capture_thread(void* arg) {
+    VideoStreamer* streamer = (VideoStreamer*)arg;
+    cv::Mat frame;
+    const int frame_delay_ms = 1000 / streamer->target_fps;
+
+    while (streamer->running) {
+        uint64_t start = cv::getTickCount();
+
+        if (!streamer->cap->read(frame) || frame.empty()) {
+            break;
+        }
+
+        // Allocation explicite
+
+        if (streamer->callback) {
+            streamer->callback(
+                frame.data,
+                frame.cols,
+                frame.rows,
+                frame.channels(),
+                streamer->user_data
+            );
+        }
+
+        uint64_t elapsed = (cv::getTickCount() - start) * 1000 / cv::getTickFrequency();
+        int remaining = frame_delay_ms - (int)elapsed;
+
+        if (remaining > 0) {
+#ifdef _WIN32
+            Sleep(remaining);
+#else
+            usleep(remaining * 1000);
+#endif
+        }
+    }
+
+    return NULL;
+}
+
+void* VideoStreamCreate(const VideoStreamConfig* config) {
+    VideoStreamer* streamer = (VideoStreamer*)malloc(sizeof(VideoStreamer));
+    streamer->cap = new cv::VideoCapture(config->device_index);
+    streamer->running = false;
+    streamer->callback = NULL;
+    streamer->user_data = config->user_data;
+    streamer->target_fps = config->target_fps > 0 ? config->target_fps : 30;
+    return streamer;
+}
+
+void VideoStreamStart(void* handle, FrameCallback callback) {
+    VideoStreamer* streamer = (VideoStreamer*)handle;
+    if (streamer->running) return;
+
+    streamer->running = true;
+    streamer->callback = callback;
+
+#ifdef _WIN32
+    streamer->thread = CreateThread(NULL, 0, (ThreadFunc)capture_thread, streamer, 0, NULL);
+    SetThreadPriority(streamer->thread, THREAD_PRIORITY_TIME_CRITICAL);
+#else
+    pthread_create(&streamer->thread, NULL, capture_thread, streamer);
+    struct sched_param params = { .sched_priority = sched_get_priority_max(SCHED_FIFO) };
+    pthread_setschedparam(streamer->thread, SCHED_FIFO, &params);
+#endif
+}
+
+void VideoStreamStop(void* handle) {
+    VideoStreamer* streamer = (VideoStreamer*)handle;
+    if (!streamer->running) return;
+
+    streamer->running = false;
+#ifdef _WIN32
+    WaitForSingleObject(streamer->thread, INFINITE);
+    CloseHandle(streamer->thread);
+#else
+    pthread_join(streamer->thread, NULL);
+#endif
+}
+
+void VideoStreamFree(void* handle) {
+    VideoStreamer* streamer = (VideoStreamer*)handle;
+    VideoStreamStop(streamer);
+    if (streamer->cap->isOpened()) {
+        streamer->cap->release();
+    }
+    delete streamer->cap;
+    free(streamer);
+}
 
 unsigned char* CaptureFrame(int deviceIndex, int* width, int* height, int* channels, int* bufferSize) {
     try {

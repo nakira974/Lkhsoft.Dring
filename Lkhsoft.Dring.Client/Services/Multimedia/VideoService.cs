@@ -1,22 +1,64 @@
-using System.Reflection;
 using System.Runtime.InteropServices;
 using Lkhsoft.Dring.Client.Exceptions;
+using SkiaSharp;
 
 namespace Lkhsoft.Dring.Client.Services.Multimedia;
 
 /// <summary>
 /// Video service implementation
 /// </summary>
-internal class VideoService : IVideoService
+internal partial class VideoService : IVideoService
 {
+    /// <summary>
+    /// Native thread handle
+    /// </summary>
+    private IntPtr _handle;
+    /// <summary>
+    /// Native thread frame callback
+    /// </summary>
+    private IVideoService.FrameCallback _frameCallback;
+    /// <summary>
+    /// SkiaSharp bitmap frame handler
+    /// </summary>
+    private Action<SKBitmap> _frameHandler;
+    /// <summary>
+    /// Bitmap lock object
+    /// </summary>
+    private readonly object _bitmapLock = new();
 
+    public VideoService()
+    {
+        _frameCallback = OnFrameReceived;
+    }
+    
     /// <inheritdoc />
-    public byte[] CaptureVideoStream(int deviceIndex, out int width, out int height, out int channels)
+    public void Configure(int deviceIndex, int targetFps = 30)
+    {
+        var config = new VideoStreamConfig
+        {
+            DeviceIndex = deviceIndex,
+            TargetFps = targetFps,
+            UserData = IntPtr.Zero
+        };
+        _handle = VideoStreamCreate(ref config);
+    }
+    
+    /// <inheritdoc />
+    public void Start(Action<SKBitmap> frameHandler)
+    {
+        _frameHandler = frameHandler ?? throw new ArgumentNullException(nameof(frameHandler));
+        VideoStreamStart(_handle, _frameCallback);
+    }
+
+    
+    /// <inheritdoc />
+    public byte[] CaptureImage(int deviceIndex, out int width, out int height, out int channels)
     {
         IntPtr framePtr;
+        int bufferSize;
         try
         {
-            framePtr = CaptureFrame(deviceIndex, out width, out height, out channels);
+            framePtr = CaptureFrame(deviceIndex, out width, out height, out channels, out bufferSize);
         }
         catch(Exception ex)
         {
@@ -24,7 +66,7 @@ internal class VideoService : IVideoService
         }
         
         if (framePtr == IntPtr.Zero) throw new Exception("Failed to capture video stream");
-        var frame = new byte[width * height * channels];
+        var frame = new byte[bufferSize];
         Marshal.Copy(framePtr, frame, 0, frame.Length);
         
         // free du pointeur alloué par la fonction native
@@ -71,44 +113,166 @@ internal class VideoService : IVideoService
         }
         return devices;
     }
+    
+    /// <inheritdoc />
+    public void Dispose()
+    {
+        VideoStreamFree(_handle);
+        _handle = IntPtr.Zero;
+        GC.SuppressFinalize(this);
+    }
 
-    #region NATIVE METHODS
+    #region PRIVATE METHODS
+
     /// <summary>
-    /// Captures a frame from the video device
+    /// Frame received callback
     /// </summary>
-    /// <param name="deviceIndex">Device index</param>
-    /// <param name="width">Device width</param>
-    /// <param name="height">Device height</param>
-    /// <param name="channels">Device channels</param>
-    /// <returns>A video stream from the device</returns>
-    [DllImport(NativeLibraries.MultimediaStream, CallingConvention = CallingConvention.Cdecl)]
-    private static extern IntPtr CaptureFrame(int deviceIndex, out int width, out int height, out int channels);
+    /// <param name="data">OpenCV frame data</param>
+    /// <param name="width">OpenCV frame width</param>
+    /// <param name="height">OpenCV frame height</param>
+    /// <param name="channels">OpenCV frame channels (3)</param>
+    /// <param name="userData">Native thread user data</param>
+    private void OnFrameReceived(IntPtr data, int width, int height, int channels, IntPtr userData)
+    {
+        try
+        {
+            // 1. Vérification des paramètres d'entrée
+            if (data == IntPtr.Zero || width <= 0 || height <= 0 || channels != 3)
+            {
+                Console.WriteLine("Paramètres de frame invalides");
+                return;
+            }
+
+            // 2. Calcul de la taille des données
+            int bufferSize = width * height * channels;
+            var info = new SKImageInfo(width, height, SKColorType.Rgba8888);
+
+            // 3. Copie sécurisée des données vers un buffer managé
+            byte[] managedBuffer = new byte[bufferSize];
+            Marshal.Copy(data, managedBuffer, 0, bufferSize);
+
+            MainThread.BeginInvokeOnMainThread(() =>
+            {
+                lock (_bitmapLock)
+                {
+                    try
+                    {
+                        // 4. Création du bitmap SkiaSharp
+                        using var tempBitmap = new SKBitmap(info);
+
+                        // 5. Conversion BGR vers RGBA (si nécessaire)
+                        unsafe
+                        {
+                            fixed (byte* srcPtr = managedBuffer)
+                            {
+                                byte* dstPtr = (byte*) tempBitmap.GetPixels();
+
+                                for (int i = 0; i < bufferSize; i += 3)
+                                {
+                                    // BGR to RGBA
+                                    dstPtr[i] = srcPtr[i + 2]; // R
+                                    dstPtr[i + 1] = srcPtr[i + 1]; // G
+                                    dstPtr[i + 2] = srcPtr[i]; // B
+                                    dstPtr[i + 3] = 255; // A
+                                }
+                            }
+                        }
+
+                        // 6. Notification du handler
+                        _frameHandler?.Invoke(tempBitmap.Copy());
+                    }
+                    catch (Exception ex)
+                    {
+                        Console.WriteLine($"Erreur de traitement d'image: {ex.Message}");
+                    }
+                }
+            });
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Erreur OnFrameReceived: {ex.Message}");
+        }
+    }
+
+    #endregion
+        #region NATIVE METHODS
+        /// <summary>
+        /// Captures a frame from the video device
+        /// </summary>
+        /// <param name="deviceIndex">Device index</param>
+        /// <param name="width">Device width</param>
+        /// <param name="height">Device height</param>
+        /// <param name="channels">Device channels</param>
+        /// <returns>A video stream from the device</returns>
+        [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial IntPtr CaptureFrame(int deviceIndex, out int width, out int height, out int channels, out int bufferSize);
     
     /// <summary>
     /// Lists the available video devices
     /// </summary>
     /// <param name="count">Devices count</param>
     /// <returns>Host video device</returns>
-    [DllImport(NativeLibraries.MultimediaStream, CallingConvention = CallingConvention.Cdecl)]
-    private static extern IntPtr GetVideoDevices(out int count);
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial IntPtr GetVideoDevices(out int count);
 
     /// <summary>
     /// Frees the frame
     /// </summary>
     /// <param name="frame">Frame stream to be free</param>
-    [DllImport(NativeLibraries.MultimediaStream, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void FreeFrame(IntPtr frame);
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial void FreeFrame(IntPtr frame);
 
     /// <summary>
     /// Frees the video devices array
     /// </summary>
     /// <param name="devices">Video devices struct array to be free</param>
-    [DllImport(NativeLibraries.MultimediaStream, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void FreeVideoDevices(IntPtr devices);
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial void FreeVideoDevices(IntPtr devices);
+    
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial IntPtr VideoStreamCreate(ref VideoStreamConfig config);
+
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial void VideoStreamStart(IntPtr handle, IVideoService.FrameCallback callback);
+
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial void VideoStreamStop(IntPtr handle);
+
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial void VideoStreamFree(IntPtr handle);
     #endregion
 }
 
 #region NATIVE STRUCTS
+/// <summary>
+/// Video stream configuration
+/// </summary>
+[StructLayout(LayoutKind.Sequential,  CharSet = CharSet.Ansi)]
+public struct VideoStreamConfig
+{
+    /// <summary>
+    /// Device index
+    /// </summary>
+    public int DeviceIndex;
+    /// <summary>
+    /// Target FPS
+    /// </summary>
+    public int TargetFps;
+    /// <summary>
+    /// User data pointer
+    /// </summary>
+    public IntPtr UserData;
+}
+
+
 /// <summary>
 /// Video device structure
 /// </summary>
