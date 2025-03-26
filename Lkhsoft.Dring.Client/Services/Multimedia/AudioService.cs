@@ -13,7 +13,7 @@ namespace Lkhsoft.Dring.Client.Services.Multimedia;
 /// <summary>
 /// Audio service implementation
 /// </summary>
-internal class AudioService : IAudioService
+internal partial class AudioService : IAudioService
 {
     private readonly ISessionService _sessionService;
 
@@ -259,8 +259,10 @@ internal class AudioService : IAudioService
     /// Initializes the audio library
     /// </summary>
     /// <returns>True if PortAudio has been correctly initialized, otherwise false</returns>
-    [DllImport(NativeLibraries.MultimediaStream, CallingConvention = CallingConvention.Cdecl)]
-    private static extern bool Audio_Initialize();
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool Audio_Initialize();
 
     /// <summary>
     /// Starts capturing audio
@@ -271,8 +273,10 @@ internal class AudioService : IAudioService
     /// <param name="numChannels">Number of channels</param>
     /// <param name="bufferCapacity">Buffer capacity</param>
     /// <returns>True if the capture has been correctly initialized, otherwise false</returns>
-    [DllImport(NativeLibraries.MultimediaStream, CallingConvention = CallingConvention.Cdecl)]
-    private static extern bool Audio_StartCapture(IntPtr context, int hostApiContext, int sampleRate, int numChannels,
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool Audio_StartCapture(IntPtr context, int hostApiContext, int sampleRate, int numChannels,
         int bufferCapacity);
 
     /// <summary>
@@ -284,8 +288,10 @@ internal class AudioService : IAudioService
     /// <param name="numChannels">Number of channels</param>
     /// <param name="bufferCapacity">Buffer capacity</param>
     /// <returns>True if the capture has been correctly initialized, otherwise false</returns>
-    [DllImport(NativeLibraries.MultimediaStream, CallingConvention = CallingConvention.Cdecl)]
-    private static extern bool Audio_StartPlay(IntPtr context, int hostApiContext, int sampleRate, int numChannels,
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    [return: MarshalAs(UnmanagedType.Bool)]
+    private static partial bool Audio_StartPlay(IntPtr context, int hostApiContext, int sampleRate, int numChannels,
         int bufferCapacity);
 
     /// <summary>
@@ -293,28 +299,32 @@ internal class AudioService : IAudioService
     /// </summary>
     /// <param name="context">PortAudio context to be destroyed</param>
     [DllImport(NativeLibraries.MultimediaStream, CallingConvention = CallingConvention.Cdecl)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
     private static extern void Audio_StopCapture(IntPtr context);
 
     /// <summary>
     /// Shuts down the audio library
     /// </summary>
-    [DllImport(NativeLibraries.MultimediaStream, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void Audio_Shutdown();
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial void Audio_Shutdown();
 
     /// <summary>
     /// Gets the audio devices available on the system
     /// </summary>
     /// <param name="deviceCount">Number of available devices on the system</param>
     /// <returns>A pointer to malloc allocated Device struct array</returns>
-    [DllImport(NativeLibraries.MultimediaStream, CallingConvention = CallingConvention.Cdecl)]
-    private static extern IntPtr GetAudioDevices(out int deviceCount);
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial IntPtr GetAudioDevices(out int deviceCount);
 
     /// <summary>
     /// Frees the audio devices array
     /// </summary>
     /// <param name="devices">Device struct array to desallocated</param>
-    [DllImport(NativeLibraries.MultimediaStream, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void FreeAudioDevices(IntPtr devices);
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial void FreeAudioDevices(IntPtr devices);
 
     /// <summary>
     /// Gets the audio data from the audio stream
@@ -323,8 +333,9 @@ internal class AudioService : IAudioService
     /// <param name="buffer">Buffer to store the audio data</param>
     /// <param name="bufferSize">Buffer size</param>
     /// <returns>A pointer to the audio data</returns>
-    [DllImport(NativeLibraries.MultimediaStream, CallingConvention = CallingConvention.Cdecl)]
-    private static extern int Audio_GetAudioData(IntPtr context, float[] buffer, int bufferSize);
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial int Audio_GetAudioData(IntPtr context, float[] buffer, int bufferSize);
 
     /// <summary>
     /// Sets the audio data from the audio stream
@@ -332,16 +343,18 @@ internal class AudioService : IAudioService
     /// <param name="context">Audio context</param>
     /// <param name="buffer">Buffer to write the audio data</param>
     /// <param name="bufferSize">Buffer size</param>
-    [DllImport(NativeLibraries.MultimediaStream, CallingConvention = CallingConvention.Cdecl)]
-    public static extern void Audio_AddData(IntPtr context, IntPtr buffer, int bufferSize);
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial void Audio_AddData(IntPtr context, IntPtr buffer, int bufferSize);
 
     /// <summary>
     /// Registers the audio data callback
     /// </summary>
     /// <param name="context"></param>
     /// <param name="callback"></param>
-    [DllImport(NativeLibraries.MultimediaStream, CallingConvention = CallingConvention.Cdecl)]
-    private static extern void RegisterAudioDataCallback(IntPtr context, IntPtr callback);
+    [LibraryImport(NativeLibraries.MultimediaStream)]
+    [UnmanagedCallConv(CallConvs = [typeof(System.Runtime.CompilerServices.CallConvCdecl)])]
+    private static partial void RegisterAudioDataCallback(IntPtr context, IntPtr callback);
 
     #endregion
 }
