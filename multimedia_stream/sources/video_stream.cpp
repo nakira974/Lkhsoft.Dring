@@ -70,7 +70,6 @@ static void* capture_thread(void* arg) {
         }
 
         // Allocation explicite
-
         if (streamer->callback) {
             streamer->callback(
                 frame.data,
@@ -98,7 +97,10 @@ static void* capture_thread(void* arg) {
 
 void* VideoStreamCreate(const VideoStreamConfig* config) {
     VideoStreamer* streamer = (VideoStreamer*)malloc(sizeof(VideoStreamer));
-    streamer->cap = new cv::VideoCapture(config->device_index);
+    // Autodétection de l'api de capture
+    const int apiID = cv::CAP_ANY;
+    // On lance la capture
+    streamer->cap = new cv::VideoCapture(config->device_index, apiID);
     streamer->running = false;
     streamer->callback = NULL;
     streamer->user_data = config->user_data;

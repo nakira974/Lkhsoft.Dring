@@ -99,11 +99,10 @@ public partial class AudioStreamPageModel : INotifyPropertyChanged
             CanvasView?.InvalidateSurface();
         }
     }
-
-
+    
     private void StartStreaming()
     {
-        if (SelectedInputAudioDevice == null || SelectedOutputAudioDevice == null)
+        if (SelectedInputAudioDevice is null || SelectedOutputAudioDevice is null)
             return;
 
         _audioService.StartCapture(SelectedInputAudioDevice.HostApiDeviceIndex,
