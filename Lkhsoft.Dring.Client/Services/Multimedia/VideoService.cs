@@ -124,75 +124,79 @@ internal partial class VideoService : IVideoService
 
     #region PRIVATE METHODS
 
-    /// <summary>
-    /// Frame received callback
-    /// </summary>
-    /// <param name="data">OpenCV frame data</param>
-    /// <param name="width">OpenCV frame width</param>
-    /// <param name="height">OpenCV frame height</param>
-    /// <param name="channels">OpenCV frame channels (3)</param>
-    /// <param name="userData">Native thread user data</param>
     private void OnFrameReceived(IntPtr data, int width, int height, int channels, IntPtr userData)
+{
+    try
     {
-        try
+        // 1. Validation des paramètres
+        if (data == IntPtr.Zero || width <= 0 || height <= 0 || channels != 3)
         {
-            // 1. Vérification des paramètres d'entrée
-            if (data == IntPtr.Zero || width <= 0 || height <= 0 || channels != 3)
+            Console.WriteLine("Paramètres de frame invalides");
+            return;
+        }
+
+        // 2. Calcul de la taille du buffer
+        int bufferSize = width * height * channels;
+
+        // 3. Copie des données vers un buffer managé
+        byte[] managedBuffer = new byte[bufferSize];
+        Marshal.Copy(data, managedBuffer, 0, bufferSize);
+        
+        MainThread.BeginInvokeOnMainThread(() =>
+        {
+            lock (_bitmapLock)
             {
-                Console.WriteLine("Paramètres de frame invalides");
-                return;
-            }
-
-            // 2. Calcul de la taille des données
-            int bufferSize = width * height * channels;
-            var info = new SKImageInfo(width, height, SKColorType.Rgba8888);
-
-            // 3. Copie sécurisée des données vers un buffer managé
-            byte[] managedBuffer = new byte[bufferSize];
-            Marshal.Copy(data, managedBuffer, 0, bufferSize);
-
-            MainThread.BeginInvokeOnMainThread(() =>
-            {
-                lock (_bitmapLock)
+                try
                 {
-                    try
+                    // 4. Création d'un bitmap SkiaSharp avec le bon format
+                    var info = new SKImageInfo(width, height, SKColorType.Rgba8888);
+                    var bitmap = new SKBitmap(info);
+
+                    // 5. Conversion BGR vers RGBA (OpenCV utilise BGR par défaut)
+                    unsafe
                     {
-                        // 4. Création du bitmap SkiaSharp
-                        using var tempBitmap = new SKBitmap(info);
-
-                        // 5. Conversion BGR vers RGBA (si nécessaire)
-                        unsafe
+                        fixed (byte* srcPtr = managedBuffer)
                         {
-                            fixed (byte* srcPtr = managedBuffer)
-                            {
-                                byte* dstPtr = (byte*) tempBitmap.GetPixels();
+                            byte* dstPtr = (byte*)bitmap.GetPixels();
 
-                                for (int i = 0; i < bufferSize; i += 3)
+                            // Parcours de chaque pixel en hauteur
+                            for (int y = 0; y < height; y++)
+                            {
+                                // Parcours de chaque pixel en largeur
+                                for (int x = 0; x < width; x++)
                                 {
-                                    // BGR to RGBA
-                                    dstPtr[i] = srcPtr[i + 2]; // R
-                                    dstPtr[i + 1] = srcPtr[i + 1]; // G
-                                    dstPtr[i + 2] = srcPtr[i]; // B
-                                    dstPtr[i + 3] = 255; // A
+                                    
+                                    int srcIndex = (y * width + x) * 3;
+                                    int dstIndex = (y * width + x) * 4;
+
+                                    // Conversion BGR to RGBA
+                                    dstPtr[dstIndex]     = srcPtr[srcIndex + 2]; // R
+                                    dstPtr[dstIndex + 1] = srcPtr[srcIndex + 1]; // G
+                                    dstPtr[dstIndex + 2] = srcPtr[srcIndex];     // B
+                                    dstPtr[dstIndex + 3] = 255;                  // A
                                 }
                             }
                         }
+                    }
 
-                        // 6. Notification du handler
-                        _frameHandler?.Invoke(tempBitmap.Copy());
-                    }
-                    catch (Exception ex)
-                    {
-                        Console.WriteLine($"Erreur de traitement d'image: {ex.Message}");
-                    }
+                    // 6. Notification du handler avec une COPIE du bitmap
+                    _frameHandler?.Invoke(bitmap.Copy());
+                    
+                    // 7. Nettoyage
+                    bitmap.Dispose();
                 }
-            });
-        }
-        catch (Exception ex)
-        {
-            Console.WriteLine($"Erreur OnFrameReceived: {ex.Message}");
-        }
+                catch (Exception ex)
+                {
+                    Console.WriteLine($"Erreur de traitement d'image: {ex.Message}");
+                }
+            }
+        });
     }
+    catch (Exception ex)
+    {
+        Console.WriteLine($"Erreur OnFrameReceived: {ex.Message}");
+    }
+}
 
     #endregion
         #region NATIVE METHODS
