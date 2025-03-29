@@ -130,7 +130,7 @@ internal partial class VideoService : IVideoService
     #region PRIVATE METHODS
 
     /// <summary>
-    /// Called when a frame is received from openCV
+    /// Called when a frame is received from openCV, do not clean the frame here as it's done by openCV itself
     /// </summary>
     /// <param name="data">OpenCV frame</param>
     /// <param name="width">OpenCV frame's width</param>
@@ -139,19 +139,23 @@ internal partial class VideoService : IVideoService
     /// <param name="userData">Native thread user data</param>
     private void OnFrameReceived(IntPtr data, int width, int height, int channels, IntPtr userData)
     {
+        /*
+         * Workflow de traitement d'image et rendu
+         */
         try
         {
-            // 1. Validation des paramètres
+            // 1) Si pointeur null ou dimensions invalides où qu'on a moins de 3 canaux sur la frame
             if (data == IntPtr.Zero || width <= 0 || height <= 0 || channels != 3)
             {
                 Console.WriteLine("Paramètres de frame invalides");
                 return;
             }
 
-            // 2. Calcul de la taille du buffer
+            // 2) Calcul de la taille du buffer
+            // [width * height * channels] -> [B G R]
             var bufferSize = width * height * channels;
 
-            // 3. Copie des données vers un buffer managé
+            // 3) Copie des données vers un buffer managé
             var managedBuffer = new byte[bufferSize];
             Marshal.Copy(data, managedBuffer, 0, bufferSize);
 
@@ -161,37 +165,47 @@ internal partial class VideoService : IVideoService
                 {
                     try
                     {
-                        // 4. Création d'un bitmap SkiaSharp avec le bon format
+                        // 4) Création d'un bitmap SkiaSharp avec le bon format
                         var info = new SKImageInfo(width, height, SKColorType.Rgba8888);
                         var bitmap = new SKBitmap(info);
 
-                        // 5. Conversion BGR vers RGBA (OpenCV utilise BGR par défaut)
+                        // 5) Conversion BGR vers RGBA (OpenCV utilise BGR par défaut)
                         unsafe
                         {
+                            // Pointeur de la frame managée
                             fixed (byte* srcPtr = managedBuffer)
                             {
                                 var dstPtr = (byte*) bitmap.GetPixels();
-
-                                // Parcours de chaque pixel en hauteur
+                                
+                                /*
+                                 * [BGR] ->  [RGBA]
+                                 * Le principe ici,
+                                 * c'est de copier les séquences de 3 bytes (BGR)
+                                 * dans une séquence de 4 bytes (RGBA),
+                                 * naïvement, j'ai mis à 255 le canal alpha
+                                 * pour ne pas avoir de transparence.
+                                 * Ce qui donne :
+                                 * [Bn Gn Rn Bn+1 Gn+1 Rn+1...] → [Rn Gn Bn An Rn+1 Gn+1 Bn+1 An+1...]
+                                 * Où 'n' est l'indice du pixel calculé par srcIndex et dstIndex
+                                 */
                                 for (var y = 0; y < height; y++)
                                 {
-                                    // Parcours de chaque pixel en largeur
                                     for (var x = 0; x < width; x++)
                                     {
-                                        var srcIndex = (y * width + x) * 3;
-                                        var dstIndex = (y * width + x) * 4;
+                                        var bgrIndex = (y * width + x) * 3;
+                                        var rgbaIndex = (y * width + x) * 4;
 
                                         // Conversion BGR to RGBA
-                                        dstPtr[dstIndex] = srcPtr[srcIndex + 2]; // R
-                                        dstPtr[dstIndex + 1] = srcPtr[srcIndex + 1]; // G
-                                        dstPtr[dstIndex + 2] = srcPtr[srcIndex]; // B
-                                        dstPtr[dstIndex + 3] = 255; // A
+                                        dstPtr[rgbaIndex] = srcPtr[bgrIndex + 2]; // R
+                                        dstPtr[rgbaIndex + 1] = srcPtr[bgrIndex + 1]; // G
+                                        dstPtr[rgbaIndex + 2] = srcPtr[bgrIndex]; // B
+                                        dstPtr[rgbaIndex + 3] = 255; // A
                                     }
                                 }
                             }
                         }
 
-                        // 6. Notification du handler avec une COPIE du bitmap
+                        // 6. Notification du handler avec une copie du bitmap
                         _frameHandler?.Invoke(bitmap.Copy());
 
                         // 7. Nettoyage

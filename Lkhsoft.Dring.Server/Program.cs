@@ -14,6 +14,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using Lkhsoft.Dring.Messages;
+using Lkhsoft.Dring.Messages.Authentication;
 using Lkhsoft.Dring.Server.Utility;
 using Lkhsoft.Dring.Server.Utility.Core;
 using Lkhsoft.Dring.Shared.Cli;
@@ -73,7 +74,7 @@ internal class Program
     /// <summary>
     ///     Message priority queue
     /// </summary>
-    private static readonly PriorityQueue<Message, byte> GlobalPriorityQueue = new();
+    private static readonly PriorityQueue<ResponseMessage, byte> GlobalPriorityQueue = new();
 
     /// <summary>
     ///     Server certificate
@@ -213,9 +214,11 @@ internal class Program
 
            if (connectionAttempt > 3)
            {
-               var unauthorizedResponse = new Message(MessageType.Authentication, [0x3], 0, 1);
+               var unauthorizedResponse = 
+                   new ResponseMessage(MessageType.Authentication, ResponseMessageType.Error,
+                       new AuthenticationErrorMessage(AuthenticationErrorType.TooManyAttempts, "Number of attempts exceeded"));
                var unauthorizedResponseStream = new MemoryStream();
-               await JsonSerializer.SerializeAsync<Message>(unauthorizedResponseStream, unauthorizedResponse, cancellationToken: cancellationToken);
+               await JsonSerializer.SerializeAsync<ResponseMessage>(unauthorizedResponseStream, unauthorizedResponse, cancellationToken: cancellationToken);
                await sslStream.WriteAsync(unauthorizedResponseStream.ToArray(), cancellationToken);
            }
             
@@ -302,7 +305,7 @@ internal class Program
                 }
 
                 Array.Resize(ref buffer, bytesRead);
-                var message = new Message(MessageType.Content, buffer, 0, bytesRead);
+                var message = new ResponseMessage(MessageType.Content, ResponseMessageType.Success, buffer, 0, bytesRead);
                 lock (GlobalPriorityQueue)
                 {
                     GlobalPriorityQueue.Enqueue(message, 0);
@@ -338,15 +341,15 @@ internal class Program
         try
         {
             memoryStream.Position = 0;
-            var message = await JsonSerializer.DeserializeAsync<Message>(memoryStream, deserializerOptions, cancellationToken);
+            var message = await JsonSerializer.DeserializeAsync<RequestMessage>(memoryStream, deserializerOptions, cancellationToken);
             if (message is null) throw new SerializationException("Could not deserialize authentication message");
-            memoryStream = new MemoryStream(message.Data ?? throw new InvalidOperationException("Authentication message data is null"));
+            memoryStream = new MemoryStream(message.Body.Data ?? throw new InvalidOperationException("Authentication message data is null"));
             var connectedUser = await JsonSerializer.DeserializeAsync<ConnectedUser>(memoryStream, deserializerOptions, cancellationToken);
             if (connectedUser is null) throw new InvalidOperationException("Could not deserialize user");
             var isAuthenticated = await Auth(connectedUser, cancellationToken);
             if (isAuthenticated)
             {
-                var okReponse = new Message(MessageType.Authentication, [0x1], 0, 1);
+                var okReponse = new ResponseMessage(MessageType.Authentication, ResponseMessageType.Success, new SuccessMessage("Authenticated"));
                 var okResponseStream = new MemoryStream();
                 await JsonSerializer.SerializeAsync(okResponseStream, okReponse, serializerOptions, cancellationToken);
                 await sslStream.WriteAsync(okResponseStream.ToArray(), cancellationToken);
@@ -360,7 +363,9 @@ internal class Program
             _logger.LogWarning(errorMessage);
         }
 
-        var unauthorizedResponse = new Message(MessageType.Authentication, [0x0], 0, 1);
+        var unauthorizedResponse = new ResponseMessage(MessageType.Authentication, ResponseMessageType.Error, 
+            new AuthenticationErrorMessage(AuthenticationErrorType.InvalidUsernameOrPassword, "Invalid username or password"));
+        
         var unauthorizedResponseStream = new MemoryStream();
         await JsonSerializer.SerializeAsync(unauthorizedResponseStream, unauthorizedResponse,
             serializerOptions, cancellationToken);

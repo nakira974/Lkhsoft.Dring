@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 
 #endregion
 
-namespace Lkhsoft.Dring.Messages;
+namespace Lkhsoft.Dring.Messages.Authentication;
 
 /// <summary>
 /// User information
@@ -15,11 +15,11 @@ public record ConnectedUser
     /// Username of the connected user
     /// </summary>
     [JsonPropertyName("username")]
-    public string UserName { get; set; }
+    public string? UserName { get; init; }
 
     /// <summary>
     /// Encrypted password of the connected user
     /// </summary>
     [JsonPropertyName("encryptedPassword")]
-    public string EncryptedPassword { get; set; }
+    public string? EncryptedPassword { get; init; }
 }
