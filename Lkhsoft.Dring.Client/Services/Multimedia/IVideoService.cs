@@ -8,6 +8,9 @@ namespace Lkhsoft.Dring.Client.Services.Multimedia;
 /// </summary>
 public interface IVideoService : IDisposable
 {
+     /// <summary>
+     /// Native thread callback for video frame
+     /// </summary>
      [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
      public delegate void FrameCallback(IntPtr data, int width, int height, int channels, IntPtr userData);
      
@@ -31,8 +34,6 @@ public interface IVideoService : IDisposable
      /// Starts the video stream
      /// </summary>
      /// <param name="frameHandler">Skia frame handler</param>
-     /// <param name="deviceIndex">Device index</param>
-     /// <param name="targetFps">Target FPS</param>
      void Start(Action<SKBitmap> frameHandler);
 
      /// <summary>

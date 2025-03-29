@@ -10,6 +10,7 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.Json;
 using Lkhsoft.Dring.Messages;
+using Lkhsoft.Dring.Messages.Authentication;
 
 #endregion
 
@@ -41,9 +42,9 @@ public class AuthService : IAuthService
         var stream = new MemoryStream();
         await JsonSerializer.SerializeAsync<ConnectedUser>(stream, appUser, jsonSerializationOptions);
 
-        var authMessage = new Message(MessageType.Authentication, stream);
+        var authMessage = new RequestMessage(MessageType.Authentication, RequestMessageType.Login, stream);
         stream = new MemoryStream();
-        await JsonSerializer.SerializeAsync<Message>(stream, authMessage, jsonSerializationOptions);
+        await JsonSerializer.SerializeAsync<RequestMessage>(stream, authMessage, jsonSerializationOptions);
 
         try
         {
@@ -62,24 +63,36 @@ public class AuthService : IAuthService
                 var authData = new byte[1024];
                 var byteRead = await SslStream.ReadAsync(authData, 0, authData.Length);
                 Array.Resize(ref authData, byteRead);
-                var response = JsonSerializer.Deserialize<Message>(authData);
-                if (response is null || response.MessageType != MessageType.Authentication || response.Data is null ||
-                    response.Data.Length == 0)
+                var response = JsonSerializer.Deserialize<ResponseMessage>(authData);
+                if (response is null)
+                    throw new AuthenticationException("Authentication failed: invalid server response");
+
+                if (response is {Header: not null} &&
+                    (response.Header.Type == ResponseMessageType.None ||
+                     response.Header.Type == ResponseMessageType.Warning ||
+                     response.Body.Data is null ||
+                     response.Header.MessageLength == 0))
+
                     throw new AuthenticationException("Authentication failed: invalid response");
                 result = false;
-                switch (response.Data[0])
-                {
-                    case 0x1: result = true; break;
-                    case 0x3:
+                if (response.Body.Data is not null && response.Header is not null)
+                    if (response.Header is {Type : ResponseMessageType.Error})
                     {
-                        _tcpClient.Close();
-                        _tcpClient = new TcpClient();
-                        throw new AuthenticationException("Authentication exceeded the maximum number of attempts");
+                        var authenticationError =
+                            JsonSerializer.Deserialize<AuthenticationErrorMessage>(response.Body.Data);
+                        if (authenticationError is null)
+                            throw new AuthenticationException("Authentication failed: invalid response");
+                        
+                        if (authenticationError.ErrorType == AuthenticationErrorType.TooManyAttempts)
+                        {
+                            _tcpClient.Close();
+                            _tcpClient = new TcpClient();
+                        }
+                        throw new AuthenticationException(authenticationError.Message);
                     }
-                    default: result = false; break;
-                }
 
-                ;
+                if (response.Header is {Type : ResponseMessageType.Success})
+                    return true;
             }
             else
             {
@@ -98,7 +111,7 @@ public class AuthService : IAuthService
     {
         throw new NotImplementedException();
     }
-    
+
     #region PRIVATE METHODS
 
     /// <summary>
